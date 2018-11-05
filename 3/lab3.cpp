@@ -3,6 +3,12 @@
 ///
 
 #include "lab3.h"
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+
+//#include <stdio.h>
+#include <iostream>
 
 using namespace std;
 using namespace cv;
@@ -58,12 +64,12 @@ void findHouse(int *thresh, vector<string> images) {
     Mat ig_0_cp = ig_0.clone();
     Mat cont;
 
-    //double thresh = 175;
+//    double thresh = 175;
 
     cvtColor(ig_0, ig_0_cp, CV_BGR2GRAY);
-    threshold(ig_0_cp, ig_0_cp, *thresh, 100, THRESH_BINARY);
-    //findContours(ig_0, ig_0_cp, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-    //Canny(ig_0, ig_0_cp, 0, 1529);
+//    threshold(ig_0_cp, ig_0_cp, *thresh, 100, THRESH_BINARY);
+//    findContours(ig_0, ig_0_cp, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+//    Canny(ig_0, ig_0_cp, 0, 1529);
     imshow("lab3_", ig_0);
     imshow("lab3", ig_0_cp);
 }

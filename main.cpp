@@ -2,7 +2,13 @@
 /// Created by Vadim Trishin
 ///
 
-#include "3/lab3.h"
+//#include "1/lab1.cpp"
+//#include "2/lab2.h"
+//#include "3/lab3.h"
+#include "4/lab4.h"
+
+#include <opencv2/core.hpp>
+#include <iostream>
 
 
 using namespace std;
@@ -19,7 +25,10 @@ void versionOpenCV();
 /// *****************************************************
 int main() {
     //vector<string> filesList =
-    lab3();
+//    lab1();
+//    lab2();
+//    lab3();
+    lab4();
     return 0;
 }
 
