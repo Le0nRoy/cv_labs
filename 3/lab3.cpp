@@ -10,7 +10,8 @@ using namespace cv;
 void lab3(){
     vector<string> images = getFilesLab3();
     //cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/3/img_zadan/allababah/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
-    findHouse(images);
+    findHouse(nullptr, images);
+    // createTrackbar("findHouse", "lab3", &thresh, 255, findHouse, images);
     waitKey(0);
 }
 
@@ -49,22 +50,25 @@ vector<string> getFilesLab3() {
 /// Houses are warmer, than anything else.
 /// Need to find all of them and mark center of each
 /// *****************************************************
-void findHouse(vector<string> images) {
+void findHouse(int *thresh, vector<string> images) {
     Mat ig_0 = imread(images.at(0), CV_LOAD_IMAGE_COLOR);
     Mat ig_1 = imread(images.at(1), CV_LOAD_IMAGE_COLOR);
     Mat ig_2 = imread(images.at(2), CV_LOAD_IMAGE_COLOR);
 
     Mat ig_0_cp = ig_0.clone();
-    vector <uint16_t> cont
+    Mat cont;
 
-    cvtColor(ig_0, ig_0, CV_BGR2GRAY);
-    threshold(ig_0, ig_0, 175, 100, THRESH_BINARY);
-    findContours(ig_0, ig_0_cp, NULL, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    //double thresh = 175;
+
+    cvtColor(ig_0, ig_0_cp, CV_BGR2GRAY);
+    threshold(ig_0_cp, ig_0_cp, *thresh, 100, THRESH_BINARY);
+    //findContours(ig_0, ig_0_cp, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
     //Canny(ig_0, ig_0_cp, 0, 1529);
     imshow("lab3_", ig_0);
     imshow("lab3", ig_0_cp);
 }
 
+void callbackHouse(int thresh, void*) {}
 /// *****************************************************
 /// Engines are warmer than anything else.
 /// Need to find and mark center.
