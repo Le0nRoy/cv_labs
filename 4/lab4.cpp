@@ -109,9 +109,10 @@ void custom_DFT(const Mat img)
                 int sumRe2 = 0;
                 int sumIm2 = 0;
 
-                for (int defaultRow = 0; defaultRow <= numOfRows - 2; defaultRow++)
+                for (int defaultRow = 0; defaultRow <= numOfRows - 1; defaultRow++)
                 {
                     // what is x ?
+                    // take values of channels as x
                     // First sum of real parts for element (newCol, newRow)
 //                    sumRe2 += xRe(defaultCol, defaultRow) * W2.at(0).at(defaultRow);
                     // First sum of imaginary parts for element (newCol, newRow)
