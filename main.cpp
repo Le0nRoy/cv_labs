@@ -24,6 +24,7 @@ void versionOpenCV();
 /// Subminor version : 0
 /// *****************************************************
 int main() {
+    versionOpenCV();
     //vector<string> filesList =
 //    lab1();
 //    lab2();
@@ -31,7 +32,6 @@ int main() {
     lab4();
     return 0;
 }
-
 /// *****************************************************
 /// Loads files with images. (Not ready)
 /// *****************************************************
@@ -60,8 +60,5 @@ void getFiles() {
 /// Use this to get your OpenCV version.
 /// *****************************************************
 void versionOpenCV() {
-    cout << "OpenCV version : " << CV_VERSION << endl;
-    cout << "Major version : " << CV_MAJOR_VERSION << endl;
-    cout << "Minor version : " << CV_MINOR_VERSION << endl;
-    cout << "Subminor version : " << CV_SUBMINOR_VERSION << endl;
+    cout << endl << "OpenCV version : " << CV_VERSION << endl << endl;
 }

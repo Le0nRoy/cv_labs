@@ -43,6 +43,8 @@ void lab2() {
     //return 0;
 }
 
+/// May use locateROY()
+/// use Mat.ptr to get start of row
 void custom_blur(cv::Mat orig, cv::Mat res){
 	int width = orig.cols;
 	//int height = orig.rows;

@@ -18,9 +18,9 @@ void lab4()
 {
     vector<string> images(3);
     images = getFilesLab4();
-    Mat img = imread(images.at(0), CV_LOAD_IMAGE_COLOR);
-    custom_DFT(img);
-    waitKey(0);
+//    Mat img = imread(images.at(0), CV_LOAD_IMAGE_COLOR);
+    custom_DFT( images.at(0) );
+//    waitKey(0);
 }
 
 /// *****************************************************
@@ -68,7 +68,7 @@ vector<vector<float>> countW(int signalSize, int elemNum, bool inverse = false)
         RealW.at(n) = cos(currentAngle);
         ImageW.at(n) = sin(currentAngle);
     }
-    vector<vector<float>> W;
+    vector<vector<float>> W(2);
     W.at(0) = RealW;
     W.at(1) = ImageW;
     return W;
@@ -83,18 +83,30 @@ vector<vector<float>> countW(int signalSize, int elemNum, bool inverse = false)
  * (make threads)
  * @param image - image to transform
  */
-void custom_DFT(const Mat img)
+void custom_DFT(const string imgname)
 {
+    Mat img = imread(imgname.data(), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img1 = img.clone();
+    cout << endl << "img.channels() : " << img.channels() << endl;
     int numOfCols = img.cols;
     int numOfRows = img.rows;
+
+//    Mat img1(numOfRows, numOfCols, CV_8UC1);
+//    img.copyTo(img1);
+//    imshow("img1", img);
+    waitKey(0);
+
+    TickMeter msec_timer;
 
     vector<vector<float>> W1(numOfCols);
     vector<vector<float>> W2(numOfRows);
 
-    // Maybe need only one Mat ?
-    Mat transformedImgRe(numOfRows, numOfCols, CV_8UC1);
-    Mat transformedImgIm(numOfRows, numOfCols, CV_8UC1);
+    // .at(0) - reals, .at(1) - imaginary
+    Mat transformedImg(numOfRows, numOfCols, CV_8UC2);
+    cout << "transformedImg.channels() : " << transformedImg.channels() << endl;
 
+    msec_timer.reset();
+    msec_timer.start();
     for (int newCol = 0; newCol <= numOfCols - 1; newCol++)
     {
         W1 = countW(numOfCols, newCol);
@@ -106,26 +118,31 @@ void custom_DFT(const Mat img)
             int sumIm1 = 0;
             for (int defaultCol = 0; defaultCol <= numOfCols - 1; defaultCol++)
             {
-                int sumRe2 = 0;
-                int sumIm2 = 0;
+                float sumRe2 = 0;
+                float sumIm2 = 0;
 
                 for (int defaultRow = 0; defaultRow <= numOfRows - 1; defaultRow++)
                 {
-                    // what is x ?
-                    // take values of channels as x
+                    // take values of channel as x
                     // First sum of real parts for element (newCol, newRow)
-//                    sumRe2 += xRe(defaultCol, defaultRow) * W2.at(0).at(defaultRow);
+                    sumRe2 += img.at<float>(defaultCol, defaultRow) * W2.at(0).at(defaultRow);
                     // First sum of imaginary parts for element (newCol, newRow)
-//                    sumIm2 += xIm(defaultCol, defaultRow) * W2.at(1).at(defaultRow);
+                    sumIm2 += img.at<float>(defaultCol, defaultRow) * W2.at(1).at(defaultRow);
                 }
 
                 sumRe1 += sumRe2 * W1.at(0).at(defaultCol); // Final sum of real parts for element (newCol, newRow)
                 sumIm1 += sumIm2 * W1.at(1).at(defaultCol); // Final sum of imaginary parts for element (newCol, newRow)
             }
             // Need to write element to Mat somehow
-//            transformedImgRe.at(newRow, newCol) = sumRe1;
-//            transformedImgIm.at(newRow, newCol) = sumIm1;
+            transformedImg.at<Vec2b>(newRow, newCol)[0] = sumRe1;
+            transformedImg.at<Vec2b>(newRow, newCol)[1] = sumIm1;
+            img1.at<float>(newCol, newRow) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
         }
     }
+    msec_timer.stop();
+    std::cout << "OpenCV time = " << msec_timer.getTimeMilli() << " msec" << std::endl;
+    imshow("original", img);
+    imshow("fourier", img1);
+    waitKey(0);
 //    thread countW2(); // Need to make countW() with OutputArray
 }
