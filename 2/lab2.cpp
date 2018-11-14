@@ -8,7 +8,7 @@
 
 /// Remake somehow
 void lab2() {
-    cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/2/images.jpeg", CV_LOAD_IMAGE_COLOR);
+    cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/2/lena.jpeg", CV_LOAD_IMAGE_COLOR);
     //cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/2/images1.jpg", CV_LOAD_IMAGE_COLOR);
     cv::Mat lib_blur = img.clone();
     cv::Mat cust_blur = img.clone();
@@ -46,14 +46,14 @@ void lab2() {
 /// May use locateROY()
 /// use Mat.ptr to get start of row
 void custom_blur(cv::Mat orig, cv::Mat res){
-	int width = orig.cols;
-	//int height = orig.rows;
+    int width = orig.cols;
+    //int height = orig.rows;
 
     cv::MatIterator_<cv::Vec3b> beg, it, end, res_it, p;
     int blue = 0, green = 0, red = 0;
 
     for( beg = orig.begin<cv::Vec3b>(), it = beg, end = orig.end<cv::Vec3b>(),
-            res_it = res.begin<cv::Vec3b>(); it != end; ++it, ++res_it){
+         res_it = res.begin<cv::Vec3b>(); it != end; ++it, ++res_it){
         p = it;
         blue = 0, green = 0, red = 0;
         for (int i = 0; i <= 8; i++){
@@ -96,3 +96,25 @@ float compare_blurs(cv::Mat compare1, cv::Mat compare2){
     simil = (blue1+green1+red1)/((blue2+green2+red2));
     return simil;
 }
+
+//void my3x3FilterBox(Mat orig, Mat res, int x0, int y0)
+//{
+//	Rect rp(y0-1, x0-1, 3, 3);
+//	Mat roi = orig(rp);
+//	int blue = 0, green = 0, red = 0;
+//
+//	for (int i=0; i<3; i++)
+//		for (int j = 0; j < 3; j++)
+//		{
+//			Vec3b elem = roi.at<Vec3b>(i, j);
+//			blue += elem.val[0];
+//			green += elem.val[1];
+//			red += elem.val[2];
+//		}
+//
+//	blue /= 9;
+//	green /= 9;
+//	red /= 9;
+//	Vec3b newElem = Vec3b(blue, green, red);
+//	res.at<Vec3b>(x0, y0) = newElem;
+//}

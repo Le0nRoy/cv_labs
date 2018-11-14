@@ -19,9 +19,6 @@ void versionOpenCV();
 
 /// *****************************************************
 /// OpenCV version   : 3.2.0
-/// Major version    : 3
-/// Minor version    : 2
-/// Subminor version : 0
 /// *****************************************************
 int main() {
     versionOpenCV();
@@ -30,6 +27,7 @@ int main() {
 //    lab2();
 //    lab3();
     lab4();
+
     return 0;
 }
 /// *****************************************************
