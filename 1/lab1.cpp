@@ -14,8 +14,8 @@ int main()
 {
     double pi = 3.14;
 
-    Mat img = imread("/home/bledgharm/CV_labs/lab1/Image0.png", CV_LOAD_IMAGE_COLOR);//????????? ???
-    Mat cat = imread("/home/bledgharm/CV_labs/lab1/Image1.png", CV_LOAD_IMAGE_COLOR);//????????? ?????????? ????????
+    Mat img = imread("/home/bledgharm/CV_labs/lab1/Image0.png", CV_LOAD_IMAGE_COLOR);
+    Mat cat = imread("/home/bledgharm/CV_labs/lab1/Image1.png", CV_LOAD_IMAGE_COLOR);
 
     int x=3;
     for (int x = 0; x < (img.cols-cat.cols); x++)
@@ -23,7 +23,7 @@ int main()
         Mat res = img.clone();
         int y = 50 + 50 * (sin(x*pi / 180) + 1);
         Rect rect(x, y, cat.cols, cat.rows);
-        Mat ROI(res(rect)); // This is what not works
+        Mat ROI(res(rect));
         imshow("test_roi", ROI);
         cat.copyTo(ROI, cat > 5);
         imshow("Cat", cat);

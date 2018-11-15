@@ -219,8 +219,7 @@ void custom_DFT(const string imgname)
     Mat transformedImg(numOfRows, numOfCols, CV_64FC2);
 //    cout << "transformedImg.channels() : " << transformedImg.channels() << endl;
 
-    msec_timer.reset();
-    msec_timer.start();
+    // Divide on to cycles each for 1-dimension transformation
     for (int k1 = 0; k1 <= numOfRows - 1; k1++)
     {
         cout << "k1: " << k1 << endl << "total of rows: " << numOfRows << endl;
@@ -256,8 +255,6 @@ void custom_DFT(const string imgname)
         msec_timer.stop();
         std::cout << "Col time: " << msec_timer.getTimeMilli() << " msec" << std::endl;
     }
-    msec_timer.stop();
-    std::cout << "OpenCV time = " << msec_timer.getTimeMilli() << " msec" << std::endl;
     imshow("img_at_finish", img);
     imshow("fourier", img1);
     waitKey(0);
