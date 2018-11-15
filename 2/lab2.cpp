@@ -52,7 +52,8 @@ void lab2()
 /// use Mat.ptr to get start of row
 void custom_blur(const Mat orig, Mat res, Size filter_size)
 {
-    int width = orig.cols;
+    int width = res.cols;
+    int imgSize = res.cols * res.rows;
     //int height = orig.rows;
 
 //    Size filter_size(3, 3);
@@ -60,30 +61,34 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
     // After processing delete this frame
     Point startROI(0, 0);
     Rect ROI = Rect(startROI, filter_size);
-    Mat image_ROI = res(ROI);
+//    Mat image_ROI = res(ROI);
 
     MatIterator_<Vec3b> beg, it, end, res_it, p;
     int blue = 0, green = 0, red = 0;
 
-    for( beg = orig.begin<Vec3b>(), it = beg, end = orig.end<Vec3b>(),
-         res_it = res.begin<Vec3b>(); it != end; ++it, ++res_it)
+//    for( beg = orig.begin<Vec3b>(), it = beg, end = orig.end<Vec3b>(),
+//         res_it = res.begin<Vec3b>(); it != end; ++it, ++res_it)
+//    {
+//        p = it;
+//        blue = 0, green = 0, red = 0;
+    for (int i = 0; i <= imgSize; i++)
     {
-        p = it;
-        blue = 0, green = 0, red = 0;
-        for (int i = 0; i <= 8; i++)
-        {
-            p = it-(1-i/3)*width-(1-i%3);
-            blue += (*p)[0];
-            green += (*p)[1];
-            red += (*p)[2];
-        }
-
-        blue /= 9;
-        green /= 9;
-        red /= 9;
-        Vec3b newElem = Vec3b(blue, green, red);
-        *res_it = newElem;
+        ROI.x = i % width;
+        ROI.y = i / width;
+        Mat image_ROI = res(ROI);
+        // Change pixels inside img_ROI
+        p = it-(1-i/3)*width-(1-i%3);
+        blue += (*p)[0];
+        green += (*p)[1];
+        red += (*p)[2];
     }
+
+//        blue /= 9;
+//        green /= 9;
+//        red /= 9;
+//        Vec3b newElem = Vec3b(blue, green, red);
+//        *res_it = newElem;
+//    }
 }
 
 float compare_blurs(Mat compare1, Mat compare2)
