@@ -62,13 +62,6 @@ vector<string> getFilesLab4()
  */
 cv::Mat countW(int signalSize, bool inverse)
 {
-//    readOrWriteW2.lock();
-    // Stream for storing W-matrices in files
-//    fstream f;
-    // File creation
-//    ofstream fi("../4/directW.txt");
-//    fi.close();
-
     int angleSign = -1;
     if (inverse)
     {
@@ -88,34 +81,19 @@ cv::Mat countW(int signalSize, bool inverse)
     // sin(0)
     W.at<Vec2d>(0,0)[1] = 0.0;
 
-//    f.open("../4/directW.txt", fstream::in);
-//    if(!f)
-//    {
-//        cout << "error!";
-//        return;
-//    }
-
-//    int co = 0;
-//    int si = 0;
+    // Replace with turning
     for (int k = 1; k < signalSize; k++)
     {
         currentAngle = angle * k;
         for (int n = 1; n < signalSize; n++)
         {
-//            co = cos(currentAngle);
-//            si = sin(currentAngle);
-//            f << co << " " << si << ", ";
             // Change on pointers
             W.at<Vec2d>(k, n)[0] = cos(currentAngle);
             W.at<Vec2d>(k, n)[1] = sin(currentAngle);
             // Same as currentAngle = angle * k * n
             currentAngle++;
         }
-//        f << endl;
     }
-//    &output = W;
-//    f.close();
-//    readOrWriteW2.unlock();
     return W;
 }
 
@@ -137,11 +115,16 @@ void custom_DFT(const string imgname)
     int numOfCols = img.cols;
     int numOfRows = img.rows;
 
-    TickMeter msec_timer;
+    TickMeter rows_timer;
+    TickMeter matrix_timer;
 
+    matrix_timer.reset();
+    matrix_timer.start();
     int signalSize = numOfCols < numOfRows ? numOfRows : numOfCols;
     Mat W(signalSize, signalSize, CV_64FC2);
     W = countW(signalSize);
+    matrix_timer.stop();
+    cout << "W time: " << matrix_timer.getTimeSec() << "sec" << endl;
 
     // [0] - Real
     // [1] - Imaginary
@@ -149,43 +132,101 @@ void custom_DFT(const string imgname)
 //    cout << "transformedImg.channels() : " << transformedImg.channels() << endl;
 
     // Divide on two cycles each for 1-dimension transformation
-    for (int k1 = 0; k1 <= numOfRows - 1; k1++)
+    matrix_timer.reset();
+    matrix_timer.start();
+    for (int n1 = 0; n1 < numOfRows; n1++)
     {
-        cout << "k1: " << k1 << endl << "total of rows: " << numOfRows << endl;
-        msec_timer.reset();
-        msec_timer.start();
-        for (int k2 = 0; k2 <= numOfCols - 1; k2++)
+//        cout << "n1: " << n1 << endl << "total of rows: " << numOfRows << endl;
+//        rows_timer.reset();
+//        rows_timer.start();
+        for (int k2 = 0; k2 < numOfCols; k2++)
         {
-            // Formula for ONE element
+            double sumRe2 = 0;
+            double sumIm2 = 0;
+            for (int n2 = 0; n2 < numOfCols; n2++)
+            {
+                    // First sum of real parts for element (k1, k2)
+                    sumRe2 += img.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[0];
+                    // First sum of imaginary parts for element (k1, k2)
+                    sumIm2 += img.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[1];
+            }
+            transformedImg.at<Vec2d>(n1, k2)[0] = sumRe2;
+            transformedImg.at<Vec2d>(n1, k2)[1] = sumIm2;
+            img1.at<double>(n1, k2) = sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
+        }
+//        rows_timer.stop();
+//        cout << "Row time: " << rows_timer.getTimeMilli() << " msec" << endl;
+    }
+    matrix_timer.stop();
+    cout << "Matrix time: " << matrix_timer.getTimeSec() << "sec" << endl;
+
+    Mat transformedImg2 = transformedImg.clone();
+    matrix_timer.reset();
+    matrix_timer.start();
+    for (int n1 = 0; n1 < numOfCols; n1++)
+    {
+//        cout << "n1: " << n1 << endl << "total of rows: " << numOfRows << endl;
+//        rows_timer.reset();
+//        rows_timer.start();
+        for (int k2 = 0; k2 < numOfRows; k2++)
+        {
             double sumRe1 = 0;
             double sumIm1 = 0;
-            for (int n1 = 0; n1 <= numOfRows - 1; n1++)
+            for (int n2 = 0; n2 < numOfRows; n2++)
             {
-                double sumRe2 = 0;
-                double sumIm2 = 0;
-
-                for (int n2 = 0; n2 <= numOfCols - 1; n2++)
-                {
-                    // take values of channel as x
-                    // First sum of real parts for element (k1, k2)
-                    sumRe2 += img.at<double>(n1, n2) * W2.at<Vec2d>(k2,n2)[0];
-                    // First sum of imaginary parts for element (k1, k2)
-                    sumIm2 += img.at<double>(n1, n2) * W2.at<Vec2d>(k2,n2)[0];
-                }
-
-                sumRe1 += sumRe2 * W1.at<Vec2d>(k1,n1)[0]; // Final sum of real parts for element (k1, k2)
-                sumIm1 += sumIm2 * W1.at<Vec2d>(k1,n1)[1]; // Final sum of imaginary parts for element (k1, k2)
+                // First sum of real parts for element (k1, k2)
+                sumRe1 += transformedImg.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[0];
+                // First sum of imaginary parts for element (k1, k2)
+                sumIm1 += transformedImg.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[1];
             }
-            // Need to write element to Mat somehow
-            transformedImg.at<Vec2d>(k1, k2)[0] = sumRe1;
-            transformedImg.at<Vec2d>(k1, k2)[1] = sumIm1;
-            img1.at<double>(k1, k2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
+            transformedImg2.at<Vec2d>(n1, k2)[0] = sumRe1;
+            transformedImg2.at<Vec2d>(n1, k2)[1] = sumIm1;
+            img1.at<double>(n1, k2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
         }
-        msec_timer.stop();
-        std::cout << "Col time: " << msec_timer.getTimeMilli() << " msec" << std::endl;
+//        rows_timer.stop();
+//        cout << "Row time: " << rows_timer.getTimeMilli() << " msec" << endl;
     }
+    matrix_timer.stop();
+    cout << "Matrix time: " << matrix_timer.getTimeSec() << "sec" << endl;
+//    for (int k1 = 0; k1 < numOfRows; k1++)
+//    {
+//        cout << "k1: " << k1 << endl << "total of rows: " << numOfRows << endl;
+//        rows_timer.reset();
+//        rows_timer.start();
+//        for (int k2 = 0; k2 < numOfCols; k2++)
+//        {
+//            // Formula for ONE element
+//            double sumRe1 = 0;
+//            double sumIm1 = 0;
+//            for (int n1 = 0; n1 < numOfRows; n1++)
+//            {
+//                double sumRe2 = 0;
+//                double sumIm2 = 0;
+//
+//                for (int n2 = 0; n2 < numOfCols; n2++)
+//                {
+//                    // First sum of real parts for element (k1, k2)
+//                    sumRe2 += img.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[0];
+//                    // First sum of imaginary parts for element (k1, k2)
+//                    sumIm2 += img.at<double>(n1, n2) * W.at<Vec2d>(k2,n2)[0];
+//                }
+//
+//                sumRe1 += sumRe2 * W.at<Vec2d>(k1,n1)[0]; // Final sum of real parts for element (k1, k2)
+//                sumIm1 += sumIm2 * W.at<Vec2d>(k1,n1)[1]; // Final sum of imaginary parts for element (k1, k2)
+//            }
+//            transformedImg.at<Vec2d>(k1, k2)[0] = sumRe1;
+//            transformedImg.at<Vec2d>(k1, k2)[1] = sumIm1;
+//            img1.at<double>(k1, k2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
+//        }
+//        rows_timer.stop();
+//        cout << "Row time: " << rows_timer.getTimeMilli() << " msec" << endl;
+//    }
+    Mat imgConverted = img.clone();
+    img.convertTo(imgConverted, CV_32FC1);
+    dft(imgConverted, imgConverted);
+    imshow("OpenCV_fourier", imgConverted);
     imshow("img_at_finish", img);
-    imshow("fourier", img1);
+    imshow("My_fourier", img1);
     waitKey(0);
 //    thread countW2(); // Need to make countW() with OutputArray
 }
