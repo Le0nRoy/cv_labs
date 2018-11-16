@@ -14,8 +14,7 @@
 std::vector<std::string> getFilesLab4();
 
 void lab4();
-cv::Mat countW1(int rows, bool inverse = false);
-cv::Mat countW2(int cols, bool inverse = false);
+cv::Mat countW(int signalSize, bool inverse = false);
 void custom_DFT(const std::string image);
 
 #endif //LAB3_LAB4_H

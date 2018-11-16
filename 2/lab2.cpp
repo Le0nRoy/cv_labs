@@ -10,7 +10,7 @@ using namespace std;
 /// Remake somehow
 void lab2()
 {
-    Mat img = imread("/home/bledgharm/CV_labs/labs/2/lena.jpeg", CV_LOAD_IMAGE_COLOR);
+    Mat img = imread("../4/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
     //cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/2/images1.jpg", CV_LOAD_IMAGE_COLOR);
     Mat lib_blur = img.clone();
     Mat cust_blur = img.clone();
@@ -42,7 +42,9 @@ void lab2()
     percentage = compare_blurs(lib_blur, cust_blur);
     cout << "Similarity = " << percentage*100 << "%" << endl;
 
-    imshow("Original", img);
+    Mat diff = lib_blur - cust_blur;
+    imshow("dif", diff);
+//    imshow("Original", img);
 
     waitKey(0);
     //return 0;
@@ -52,8 +54,8 @@ void lab2()
 /// use Mat.ptr to get start of row
 void custom_blur(const Mat orig, Mat res, Size filter_size)
 {
-    int width = res.cols;
-    int imgSize = res.cols * res.rows;
+    int width = res.cols - 2;
+    int imgSize = (res.cols - 2) * (res.rows - 2);
     //int height = orig.rows;
 
 //    Size filter_size(3, 3);
@@ -61,31 +63,54 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
     // After processing delete this frame
     Point startROI(0, 0);
     Rect ROI = Rect(startROI, filter_size);
+    int sizeROI = filter_size.height * filter_size.width;
 //    Mat image_ROI = res(ROI);
 
     MatIterator_<Vec3b> beg, it, end, res_it, p;
-    int blue = 0, green = 0, red = 0;
+//    int blue = 0, green = 0, red = 0;
 
 //    for( beg = orig.begin<Vec3b>(), it = beg, end = orig.end<Vec3b>(),
 //         res_it = res.begin<Vec3b>(); it != end; ++it, ++res_it)
 //    {
 //        p = it;
 //        blue = 0, green = 0, red = 0;
-    for (int i = 0; i <= imgSize; i++)
+    for (int i = 1; i < imgSize; i++)
     {
         ROI.x = i % width;
         ROI.y = i / width;
         Mat image_ROI = res(ROI);
         // Change pixels inside img_ROI
-        p = it-(1-i/3)*width-(1-i%3);
-        blue += (*p)[0];
-        green += (*p)[1];
-        red += (*p)[2];
+        int x = 0;
+        int y = 0;
+
+        int blue  = 0;
+        int green = 0;
+        int red   = 0;
+
+        for (int j = 0; j < sizeROI; j++)
+        {
+            x = j % filter_size.width;
+            y = j / filter_size.height;
+            blue  += image_ROI.at<Vec3b>(x,y)[0];
+//            cout << "blue for " << j << " is: " << blue << " " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
+            green += image_ROI.at<Vec3b>(x,y)[1];
+            red   += image_ROI.at<Vec3b>(x,y)[2];
+        }
+        blue /= 9;
+        green /= 9;
+        red /= 9;
+        x = ROI.x + 1;
+        y = ROI.y + 1;
+        image_ROI.at<Vec3b>(x,y)[0] = blue;
+//        cout << "new blue is: " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
+        image_ROI.at<Vec3b>(x,y)[1] = green;
+        image_ROI.at<Vec3b>(x,y)[2] = red;
+//        p = it-(1-i/3)*width-(1-i%3);
+//        blue += (*p)[0];
+//        green += (*p)[1];
+//        red += (*p)[2];
     }
 
-//        blue /= 9;
-//        green /= 9;
-//        red /= 9;
 //        Vec3b newElem = Vec3b(blue, green, red);
 //        *res_it = newElem;
 //    }
