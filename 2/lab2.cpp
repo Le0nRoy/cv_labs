@@ -55,6 +55,7 @@ void lab2()
 void custom_blur(const Mat orig, Mat res, Size filter_size)
 {
     int width = res.cols - 2;
+    int height = res.rows - 2;
     int imgSize = (res.cols - 2) * (res.rows - 2);
 
     // Need to expand original image and make non-filtering frame
@@ -63,40 +64,49 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
     Rect ROI = Rect(startROI, filter_size);
     int sizeROI = filter_size.height * filter_size.width;
 
-    MatIterator_<Vec3b> beg, it, end, res_it, p;
-
-    for (int i = 1; i < imgSize; i++)
+//    for (int i = 0; i < imgSize; i++)
+    for (int y = 0; y < height; y++)
     {
-        ROI.x = i % width;
-        ROI.y = i / width;
-        Mat image_ROI = res(ROI);
-        // Change pixels inside img_ROI
-        int x = 0;
-        int y = 0;
-
-        int blue  = 0;
-        int green = 0;
-        int red   = 0;
-
-        for (int j = 0; j < sizeROI; j++)
+        ROI.y = y;
+        for (int x = 0; x < width; x++)
         {
-            x = j % filter_size.width;
-            y = j / filter_size.height;
-            blue  += image_ROI.at<Vec3b>(x,y)[0];
-            green += image_ROI.at<Vec3b>(x,y)[1];
-            red   += image_ROI.at<Vec3b>(x,y)[2];
-        }
-        blue /= 9;
-        green /= 9;
-        red /= 9;
-        x = ROI.x + 1;
-        y = ROI.y + 1;
-        image_ROI.at<Vec3b>(x,y)[0] = blue;
+//            ROI.x = i % width;
+//            ROI.y = i / width;
+            ROI.x = x;
+            Mat image_ROI = res(ROI);
+            // Change pixels inside img_ROI
+//        int x = 0;
+//        int y = 0;
+
+            int blue = 0;
+            int green = 0;
+            int red = 0;
+
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+//                    x = j % filter_size.width;
+//                    y = j / filter_size.height;
+                    blue += image_ROI.at<Vec3b>(i, j)[0];
+                    green += image_ROI.at<Vec3b>(i, j)[1];
+                    red += image_ROI.at<Vec3b>(i, j)[2];
+                }
+            }
+            blue /= 9;
+            green /= 9;
+            red /= 9;
+//            x = ROI.x + 1;
+//            y = ROI.y + 1;
+//        cout << endl << "old blue is: " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
+            image_ROI.at<Vec3b>(1, 1)[0] = blue;
 //        cout << "new blue is: " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
-        image_ROI.at<Vec3b>(x,y)[1] = green;
-        image_ROI.at<Vec3b>(x,y)[2] = red;
+            image_ROI.at<Vec3b>(1, 1)[1] = green;
+            image_ROI.at<Vec3b>(1, 1)[2] = red;
+        }
     }
 }
+
 
 float compare_blurs(Mat compare1, Mat compare2)
 {
