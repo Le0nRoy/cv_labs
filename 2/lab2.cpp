@@ -56,24 +56,15 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
 {
     int width = res.cols - 2;
     int imgSize = (res.cols - 2) * (res.rows - 2);
-    //int height = orig.rows;
 
-//    Size filter_size(3, 3);
     // Need to expand original image and make non-filtering frame
     // After processing delete this frame
     Point startROI(0, 0);
     Rect ROI = Rect(startROI, filter_size);
     int sizeROI = filter_size.height * filter_size.width;
-//    Mat image_ROI = res(ROI);
 
     MatIterator_<Vec3b> beg, it, end, res_it, p;
-//    int blue = 0, green = 0, red = 0;
 
-//    for( beg = orig.begin<Vec3b>(), it = beg, end = orig.end<Vec3b>(),
-//         res_it = res.begin<Vec3b>(); it != end; ++it, ++res_it)
-//    {
-//        p = it;
-//        blue = 0, green = 0, red = 0;
     for (int i = 1; i < imgSize; i++)
     {
         ROI.x = i % width;
@@ -92,7 +83,6 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
             x = j % filter_size.width;
             y = j / filter_size.height;
             blue  += image_ROI.at<Vec3b>(x,y)[0];
-//            cout << "blue for " << j << " is: " << blue << " " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
             green += image_ROI.at<Vec3b>(x,y)[1];
             red   += image_ROI.at<Vec3b>(x,y)[2];
         }
@@ -105,15 +95,7 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
 //        cout << "new blue is: " << static_cast<int>(image_ROI.at<Vec3b>(x,y)[0] ) << endl;
         image_ROI.at<Vec3b>(x,y)[1] = green;
         image_ROI.at<Vec3b>(x,y)[2] = red;
-//        p = it-(1-i/3)*width-(1-i%3);
-//        blue += (*p)[0];
-//        green += (*p)[1];
-//        red += (*p)[2];
     }
-
-//        Vec3b newElem = Vec3b(blue, green, red);
-//        *res_it = newElem;
-//    }
 }
 
 float compare_blurs(Mat compare1, Mat compare2)
