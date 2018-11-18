@@ -47,6 +47,7 @@ void lab2()
 /// use Mat.ptr to get start of row
 void lab_box_filter(const Mat orig, Mat res, Size filter_size)
 {
+    // Need to add kernel array
     // Need to expand original image and make non-filtering frame
     // After processing delete this frame
     int width = res.cols - 2;

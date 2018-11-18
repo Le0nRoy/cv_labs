@@ -7,8 +7,8 @@ find_package(OpenCV REQUIRED)
 
 add_executable(CV_labs
         main.cpp
-#        1/lab1.cpp
-#        1/lab1.h
+        1/lab1.cpp
+        1/lab1.h
         2/lab2.cpp
         2/lab2.h
         3/lab3.cpp
