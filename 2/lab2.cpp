@@ -1,5 +1,4 @@
 #include "lab2.h"
-//#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
@@ -28,13 +27,13 @@ void lab2()
 
     msec_timer.reset();
     msec_timer.start();
-    custom_blur(cust_blur, cust_blur, filter_size);
+    lab_box_filter(cust_blur, cust_blur, filter_size);
     msec_timer.stop();
     imshow("Custom_Filter", cust_blur);
     cout << "Custom time = " << msec_timer.getTimeMilli() << " msec" << endl;
 
     float percentage = 0;
-    percentage = compare_blurs(lib_blur, cust_blur);
+    percentage = compare_filters(lib_blur, cust_blur);
     cout << "Similarity = " << percentage*100 << "%" << endl;
 
     Mat diff = lib_blur - cust_blur;
@@ -46,7 +45,7 @@ void lab2()
 
 /// May use locateROY()
 /// use Mat.ptr to get start of row
-void custom_blur(const Mat orig, Mat res, Size filter_size)
+void lab_box_filter(const Mat orig, Mat res, Size filter_size)
 {
     // Need to expand original image and make non-filtering frame
     // After processing delete this frame
@@ -80,14 +79,16 @@ void custom_blur(const Mat orig, Mat res, Size filter_size)
         blue /= 9;
         green /= 9;
         red /= 9;
-        image_ROI.at<Vec3b>(1, 1)[0] = blue;
-        image_ROI.at<Vec3b>(1, 1)[1] = green;
-        image_ROI.at<Vec3b>(1, 1)[2] = red;
+        int x = filter_size.width / 2;
+        int y = filter_size.height / 2;
+        image_ROI.at<Vec3b>(y, x)[0] = (uint8_t)blue;
+        image_ROI.at<Vec3b>(y, x)[1] = (uint8_t)green;
+        image_ROI.at<Vec3b>(y, x)[2] = (uint8_t)red;
     }
 }
 
 
-float compare_blurs(Mat compare1, Mat compare2)
+float compare_filters(Mat compare1, Mat compare2)
 {
     int width = compare1.cols;
     int height = compare1.rows;
