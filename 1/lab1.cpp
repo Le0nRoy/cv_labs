@@ -1,4 +1,4 @@
-
+#include "lab1.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -10,14 +10,14 @@ using namespace std;
 
 
 
-int main()
+void lab1()
 {
     double pi = 3.14;
 
-    Mat img = imread("/home/bledgharm/CV_labs/lab1/Image0.png", CV_LOAD_IMAGE_COLOR);
-    Mat cat = imread("/home/bledgharm/CV_labs/lab1/Image1.png", CV_LOAD_IMAGE_COLOR);
+    Mat img = imread("../4/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
+    // Need another image (little one)
+    Mat cat = imread("../4/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
 
-    int x=3;
     for (int x = 0; x < (img.cols-cat.cols); x++)
     {
         Mat res = img.clone();

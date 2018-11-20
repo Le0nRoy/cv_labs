@@ -2,10 +2,10 @@
 /// Created by Vadim Trishin
 ///
 
-//#include "1/lab1.cpp"
+#include "1/lab1.h"
 #include "2/lab2.h"
-//#include "3/lab3.h"
-//#include "4/lab4.h"
+#include "3/lab3.h"
+#include "4/lab4.h"
 
 #include <opencv2/core.hpp>
 #include <iostream>
@@ -24,8 +24,8 @@ int main() {
     versionOpenCV();
     //vector<string> filesList =
 //    lab1();
-    lab2();
-//    lab3();
+//    lab2();
+    lab3();
 //    lab4();
 
     return 0;

@@ -27,7 +27,7 @@ void lab3(){
 vector<string> getFilesLab3() {
     vector<string> images(15); // 12 pictures for lab3, but allocate more memory as stock
 
-    string wayToFolder = "/home/bledgharm/CV_labs/labs/3/img_zadan"; // Way from home to folder with folders that contain images
+    string wayToFolder = "../3/img_zadan"; // Way from home to folder with folders that contain images
 
     /// allababah
     images.at(0)  = wayToFolder+"/allababah/ig_0.jpg";

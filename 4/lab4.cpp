@@ -14,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-const double pi = 3.14159265359;
+const float pi = 3.14159;
 //mutex readOrWriteW2;
 //mutex readOrWriteW1;
 
@@ -23,16 +23,7 @@ void lab4()
     vector<string> images(3);
     images = getFilesLab4();
 
-//    Mat img = imread(images.at(1), CV_LOAD_IMAGE_GRAYSCALE);
-//    Mat imgConverted = img.clone();
-//    Mat img1 = img.clone();
-//    imshow("img", img);
-//    img.convertTo(imgConverted, CV_32FC1);
-//    dft(imgConverted, img1);
-//    imshow("img1", img1);
-//    waitKey(0);
-//
-    custom_DFT( images.at(1) );
+    custom_DFT( images.at(0) );
 //    waitKey(0);
 }
 
@@ -41,150 +32,147 @@ void lab4()
 /// *****************************************************
 vector<string> getFilesLab4()
 {
-    vector<string> images(3); // 12 pictures for lab3, but allocate more memory as stock
+    vector<string> images(3);
 
-    string wayToFolder = "/home/bledgharm/CV_labs/labs/4/"; // Way from home to folder with folders that contain images
-
-    images.at(0)  = wayToFolder+"ig_0.jpg";
-    images.at(1)  = wayToFolder+"ig_1.jpg";
+    images.at(0)  = "../4/ig_0.jpg";
+    images.at(1)  = "../4/ig_1.jpg";
+    images.at(2)  = "../4/ig_2.png";
 
     return images;
 }
 
 /// Throw away return value and make function, that is reading from file
 /**
- * @brief - Counts coefficient W2 for fourier transformation
- * @param cols - number of cols of image
+ * @brief - Counts coefficient W for fourier transformation
+ * @param signalSize - number of cols of image
  * @param inverse - if true, than counts coefficients for inverse fourier transformation
  * @return - Mat with all counted coefficients
  *      [0] - Real part
  *      [1] - Imaginary part
  */
-cv::Mat countW2(int cols, bool inverse)
+Mat count_W(int signalSize, bool inverse)
 {
-//    readOrWriteW2.lock();
-    // Stream for storing W-matrices in files
-//    fstream f;
-    // File creation
-//    ofstream fi("../4/directW2.txt");
-//    fi.close();
+    int angleSign = inverse ? 1 : -1;
 
-    int angleSign = -1;
-    if (inverse)
-    {
-        angleSign = 1;
-    }
-
-    double angle = 2 * angleSign * pi / cols;
-    double currentAngle = 0;
+    float angle = 2 * angleSign * pi / signalSize;
 
     // [0] - Real
     // [1] - Imaginary
-    Mat W(cols, cols, CV_64FC2);
+    Mat W(signalSize, signalSize, CV_32FC2);
 
-    // Angle of (0,0) element is always 0
-    // cos(0)
-    W.at<Vec2d>(0,0)[0] = 1.0;
-    // sin(0)
-    W.at<Vec2d>(0,0)[1] = 0.0;
-
-//    f.open("../4/directW2.txt", fstream::in);
-//    if(!f)
-//    {
-//        cout << "error!";
-//        return;
-//    }
-
-//    int co = 0;
-//    int si = 0;
-    for (int k = 1; k < cols; k++)
+    // If k or n are zero then:
+    // cos(0) = 1
+    // sin(0) = 0
+    for (int i = 0; i < signalSize; i++)
     {
-        currentAngle = angle * k;
-        for (int n = 1; n < cols; n++)
-        {
-//            co = cos(currentAngle);
-//            si = sin(currentAngle);
-//            f << co << " " << si << ", ";
-            // Change on pointers
-            W.at<Vec2d>(k, n)[0] = cos(currentAngle);
-            W.at<Vec2d>(k, n)[1] = sin(currentAngle);
-            // Same as currentAngle = angle * k * n
-            currentAngle++;
-        }
-//        f << endl;
+        // Fill first column
+        W.at<Vec2f>(i,0)[0] = 1.0;
+        W.at<Vec2f>(i,0)[1] = 0.0;
+        // Fill first row
+        W.at<Vec2f>(0,i)[0] = 1.0;
+        W.at<Vec2f>(0,i)[1] = 0.0;
     }
-//    &output = W;
-//    f.close();
-//    readOrWriteW2.unlock();
+
+    //C_[k] = C*C_[k-1] - S*S_[k-1]
+    //S_[k] = S*C_[k-1] + C*S_[k-1]
+    float cos_ = cos(angle);
+    float sin_ = sin(angle);
+
+    float cos_k_1 = 1.0;
+    float sin_k_1 = 0.0;
+    for (int k = 1; k < signalSize; k++)
+    {
+        float cos_k = cos_ * cos_k_1 - sin_ * sin_k_1;
+        float sin_k = sin_ * cos_k_1 + cos_ * sin_k_1;
+
+        float cos_n_1 = 1.0;
+        float sin_n_1 = 0.0;
+        for (int n = 1; n < signalSize; n++)
+        {
+            float cos_n = cos_k * cos_n_1 - sin_k * sin_n_1;
+            float sin_n = sin_k * cos_n_1 + cos_k * sin_n_1;
+
+            W.at<Vec2f>(k, n)[0] = cos_n;
+            W.at<Vec2f>(k, n)[1] = sin_n;
+
+            cos_n_1 = cos_n;
+            sin_n_1 = sin_n;
+        }
+        cos_k_1 = cos_k;
+        sin_k_1 = sin_k;
+    }
     return W;
 }
 
 /**
- * @brief - Counts coefficient W1 for fourier transformation
- * @param cols - number of rows of image
- * @param inverse - if true, than counts coefficients for inverse fourier transformation
- * @return - Mat with all counted coefficients
- *      [0] - Real part
- *      [1] - Imaginary part
+ * @brief - counts first (for all n2 and k2 elements) sum of DFT
+ * @param img - image for which to count sum
+ * @param W - coefficients
+ * @return - new image
  */
-cv::Mat countW1(int rows, bool inverse)
+Mat count_DFT_first_sum(const Mat img, const Mat W)
 {
-//    readOrWriteW1.lock();
-    // Stream for storing W-matrices in files
-//    fstream f;
-    // File creation
-    // Make another file for inverse
-//    ofstream fi("../4/directW1.txt");
-//    fi.close();
+    const int numOfRows = img.rows;
+    const int numOfCols = img.cols;
 
-    int angleSign = -1;
-    if (inverse)
+    Mat transformedImage(numOfRows, numOfCols, CV_32FC1);
+
+    for (int n1 = 0; n1 < numOfRows; n1++)
     {
-        angleSign = 1;
-    }
-
-    double angle = 2 * angleSign * pi / rows;
-    double currentAngle = 0;
-
-    // [0] - Real
-    // [1] - Imaginary
-    Mat W(rows, rows, CV_64FC2);
-
-    // Angle of (0,0) element is always 0
-    // cos(0)
-    W.at<Vec2d>(0,0)[0] = 1.0;
-    // sin(0)
-    W.at<Vec2d>(0,0)[1] = 0.0;
-
-//    f.open("../4/directW2.txt", fstream::in);
-//    if(!f)
-//    {
-//        cout << "error!";
-//        return;
-//    }
-
-//    int co = 0;
-//    int si = 0;
-    for (int k = 1; k < rows; k++)
-    {
-        currentAngle = angle * k;
-        for (int n = 1; n < rows; n++)
+        for (int k = 0; k < numOfCols; k++)
         {
-//            co = cos(currentAngle);
-//            si = sin(currentAngle);
-//            f << co << " " << si << ", ";
-            // Change on pointers
-            W.at<Vec2d>(k, n)[0] = cos(currentAngle);
-            W.at<Vec2d>(k, n)[1] = sin(currentAngle);
-            // Same as currentAngle = angle * k * n
-            currentAngle++;
+            float sumRe2 = 0;
+            float sumIm2 = 0;
+            float s = 0;
+            float sW = 0;
+            for (int n2 = 0; n2 < numOfCols; n2++)
+            {
+                // First sum of real parts for element (k1, k2)
+                sumRe2 += img.at<uchar>(n1, n2) * W.at<Vec2f>(k,n2)[0];
+
+                s = img.at<uchar>(n1, n2);
+                sW = W.at<Vec2f>(k,n2)[0];
+                // First sum of imaginary parts for element (k1, k2)
+                sumIm2 += img.at<uchar>(n1, n2) * W.at<Vec2f>(k,n2)[1];
+            }
+            s = sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
+            transformedImage.at<float>(n1, k) = sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
+//            transformedImage.at<float>(n1, k) = (uchar)sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
         }
-//        f << endl;
     }
-//    *output = W;
-//    f.close();
-//    readOrWriteW1.unlock();
-    return W;
+    return transformedImage;
+}
+
+/**
+ * @brief - counts second (for all n1 and k1 elements) sum of DFT
+ * @param img - image for which to count sum
+ * @param W - coefficients
+ * @return - new image
+ */
+Mat count_DFT_second_sum(const Mat img, const Mat W)
+{
+    const int numOfRows = img.rows;
+    const int numOfCols = img.cols;
+
+    Mat transformedImage(numOfRows, numOfCols, CV_32FC1);
+
+    for (int n2 = 0; n2 < numOfCols; n2++)
+    {
+        for (int k = 0; k < numOfRows; k++)
+        {
+            float sumRe1 = 0;
+            float sumIm1 = 0;
+            for (int n1 = 0; n1 < numOfRows; n1++)
+            {
+                // First sum of real parts for element (k1, k2)
+                sumRe1 += img.at<float>(n1, n2) * W.at<Vec2f>(n1, k)[0];
+                // First sum of imaginary parts for element (k1, k2)
+                sumIm1 += img.at<float>(n1, n2) * W.at<Vec2f>(n1, k)[1];
+            }
+            transformedImage.at<float>(k, n2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
+        }
+    }
+    return transformedImage;
 }
 
 /// *****************************************************
@@ -198,65 +186,43 @@ cv::Mat countW1(int rows, bool inverse)
  */
 void custom_DFT(const string imgname)
 {
+    // Need to expand to optimum size
     Mat img = imread(imgname.data(), CV_LOAD_IMAGE_GRAYSCALE);
-    Mat img1 = img.clone();
-    imshow("ing_at_start", img);
-    cout << endl << "img.channels() : " << img.channels() << endl;
-    int numOfCols = img.cols;
-    int numOfRows = img.rows;
+    const int numOfCols = img.cols;
+    const int numOfRows = img.rows;
 
-    TickMeter msec_timer;
+    TickMeter rows_timer;
+    TickMeter matrix_timer;
 
-    thread countingW2;
-    thread countingW1;
-    Mat W2(numOfCols, numOfCols, CV_64FC2);
-//    countingW2 = thread(countW2, numOfCols, &W2);
-    Mat W1(numOfRows, numOfRows, CV_64FC2);
-//    countingW1 = thread(countW2, numOfCols, &W2);
+    int signalSize = (numOfCols < numOfRows) ? numOfRows : numOfCols;
+    Mat W(signalSize, signalSize, CV_32FC2);
+    W = count_W(signalSize);
 
-    // [0] - Real
-    // [1] - Imaginary
-    Mat transformedImg(numOfRows, numOfCols, CV_64FC2);
-//    cout << "transformedImg.channels() : " << transformedImg.channels() << endl;
+    Mat img1(numOfRows, numOfCols, CV_32FC1);
 
-    // Divide on to cycles each for 1-dimension transformation
-    for (int k1 = 0; k1 <= numOfRows - 1; k1++)
-    {
-        cout << "k1: " << k1 << endl << "total of rows: " << numOfRows << endl;
-        msec_timer.reset();
-        msec_timer.start();
-        for (int k2 = 0; k2 <= numOfCols - 1; k2++)
-        {
-            // Formula for ONE element
-            double sumRe1 = 0;
-            double sumIm1 = 0;
-            for (int n1 = 0; n1 <= numOfRows - 1; n1++)
-            {
-                double sumRe2 = 0;
-                double sumIm2 = 0;
-
-                for (int n2 = 0; n2 <= numOfCols - 1; n2++)
-                {
-                    // take values of channel as x
-                    // First sum of real parts for element (k1, k2)
-                    sumRe2 += img.at<double>(n1, n2) * W2.at<Vec2d>(k2,n2)[0];
-                    // First sum of imaginary parts for element (k1, k2)
-                    sumIm2 += img.at<double>(n1, n2) * W2.at<Vec2d>(k2,n2)[0];
-                }
-
-                sumRe1 += sumRe2 * W1.at<Vec2d>(k1,n1)[0]; // Final sum of real parts for element (k1, k2)
-                sumIm1 += sumIm2 * W1.at<Vec2d>(k1,n1)[1]; // Final sum of imaginary parts for element (k1, k2)
-            }
-            // Need to write element to Mat somehow
-            transformedImg.at<Vec2d>(k1, k2)[0] = sumRe1;
-            transformedImg.at<Vec2d>(k1, k2)[1] = sumIm1;
-            img1.at<double>(k1, k2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
-        }
-        msec_timer.stop();
-        std::cout << "Col time: " << msec_timer.getTimeMilli() << " msec" << std::endl;
-    }
-    imshow("img_at_finish", img);
-    imshow("fourier", img1);
+    matrix_timer.reset();
+    matrix_timer.start();
+    img1 = count_DFT_first_sum(img, W);
+    matrix_timer.stop();
+    cout << "First sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+    imshow("My_fourier", img);
     waitKey(0);
-//    thread countW2(); // Need to make countW2() with OutputArray
+
+    matrix_timer.reset();
+    matrix_timer.start();
+    img1 = count_DFT_second_sum(img1, W);
+    matrix_timer.stop();
+    cout << "Second sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+
+//    int m = getOptimalDFTSize(img.rows);
+//    int n = getOptimalDFTSize(img.cols);
+//    Mat imgConverted(m, n, CV_32FC1, Scalar::all(0));// = img.clone();
+    Mat imgConverted;//(img.rows, img.cols, CV_32FC1, Scalar::all(0));// = img.clone();
+    img.convertTo(imgConverted, CV_32FC1);
+    dft(imgConverted, imgConverted);
+    imshow("img_at_finish", img);
+    imshow("OpenCV_fourier", imgConverted);
+    imshow("My_fourier", img1);
+    waitKey(0);
+//    thread countW2(); // Need to make count_W() with OutputArray
 }
