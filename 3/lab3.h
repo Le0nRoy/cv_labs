@@ -1,7 +1,3 @@
-///
-/// Created by Vadim Trishin
-///
-
 #ifndef LAB3_LAB3_H
 #define LAB3_LAB3_H
 
@@ -13,12 +9,10 @@ std::vector<std::string> getFilesLab3();
 void lab3();
 
 void findHouse(std::string image);
-void findEngine(std::vector<std::string> images);
-void findRobots(std::vector<std::string> images);
-void findLamp(std::vector<std::string> images);
-void findNearestRobot(std::vector<std::string> images);
-void findWrench(std::vector<std::string> images);
-
-void callbackHouse(int thresh, void*);
+void findEngine(std::string image);
+void findRobots(std::string image);
+void findLamp(std::string image);
+void findNearestRobot(std::string image);
+void findWrench(std::string image, std::string objectTemplate);
 
 #endif //LAB3_LAB3_H

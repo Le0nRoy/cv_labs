@@ -1,7 +1,3 @@
-///
-/// Created by Vadim Trishin
-///
-
 #include "1/lab1.h"
 #include "2/lab2.h"
 #include "3/lab3.h"
@@ -9,7 +5,6 @@
 
 #include <opencv2/core.hpp>
 #include <iostream>
-
 
 using namespace std;
 using namespace cv;
