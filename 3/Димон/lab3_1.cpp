@@ -7,13 +7,22 @@ int th = 0;
 Moments mnts;
 Mat img, thimg, cimg, kernel;
 
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
 	string fn;
-	if (argc>1) fn = argv[1];
-	else fn = "ig_0.jpg";
-	img = imread(fn, 0);;
+	/// Load image
+	if (argc>1)
+    {
+        fn = argv[1];
+    }
+	else
+    {
+        fn = "ig_0.jpg";
+    }
+	img = imread(fn, 0);
+	/// Show image
 	imshow(fn, img);
-
+    /// Set to binary mode
 	threshold(img, thimg, 230, 255, THRESH_BINARY);
 //	imshow("thimg", thimg);
 

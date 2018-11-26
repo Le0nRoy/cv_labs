@@ -1,7 +1,3 @@
-///
-/// Created by Vadim Trishin
-///
-
 #include "lab3.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
