@@ -12,7 +12,7 @@ std::vector<std::string> getFilesLab3();
 
 void lab3();
 
-void findHouse(int *thresh, std::vector<std::string> images);
+void findHouse(std::string image);
 void findEngine(std::vector<std::string> images);
 void findRobots(std::vector<std::string> images);
 void findLamp(std::vector<std::string> images);

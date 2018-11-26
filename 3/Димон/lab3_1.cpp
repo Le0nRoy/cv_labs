@@ -24,17 +24,15 @@ int main(int argc, char** argv)
 	imshow(fn, img);
     /// Set to binary mode
 	threshold(img, thimg, 230, 255, THRESH_BINARY);
-//	imshow("thimg", thimg);
-
+    /// kernel for morphology
 	kernel = getStructuringElement(CV_SHAPE_RECT, Size(3, 3));
 
 //	erode(thimg, cimg, kernel, Point(-1, -1), 2);
 //	imshow("erode", cimg);
-
+    /// Make object bigger
 	dilate(thimg, cimg, kernel, Point(-1, -1), 4);
-
 //	imshow("dilate", cimg);
-
+    /// Find contours of object
 	vector<vector<Point>> cnts;
 	findContours(cimg, cnts, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
@@ -43,7 +41,6 @@ int main(int argc, char** argv)
 	cvtColor(img, img, CV_GRAY2BGR);
 
 	polylines(img, cnts, true, Vec3b(0, 255, 0), 2, 8);
-
 //	imshow("polyline", img);
 
 	for (int i = 0; i < cnts.size(); i++)

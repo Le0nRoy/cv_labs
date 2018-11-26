@@ -9,10 +9,14 @@
 using namespace std;
 using namespace cv;
 
-void lab3(){
+void lab3()
+{
     vector<string> images = getFilesLab3();
-    //cv::Mat img = cv::imread("/home/bledgharm/CV_labs/labs/3/img_zadan/allababah/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
-    findHouse(nullptr, images);
+    string imgForFunc;
+//    imgForFunc = images.at(0);
+    imgForFunc = images.at(1);
+//    imgForFunc = images.at(2);
+    findHouse(imgForFunc);
     // createTrackbar("findHouse", "lab3", &thresh, 255, findHouse, images);
     waitKey(0);
 }
@@ -20,10 +24,11 @@ void lab3(){
 /// *****************************************************
 /// Loads files with images.
 /// *****************************************************
-vector<string> getFilesLab3() {
+vector<string> getFilesLab3()
+{
     vector<string> images(15); // 12 pictures for lab3, but allocate more memory as stock
 
-    string wayToFolder = "../3/img_zadan"; // Way from home to folder with folders that contain images
+    string wayToFolder = "../3/Task/img_zadan"; // Way from home to folder with folders that contain images
 
     /// allababah
     images.at(0)  = wayToFolder+"/allababah/ig_0.jpg";
@@ -52,30 +57,46 @@ vector<string> getFilesLab3() {
 /// Houses are warmer, than anything else.
 /// Need to find all of them and mark center of each
 /// *****************************************************
-void findHouse(int *thresh, vector<string> images) {
-    Mat ig_0 = imread(images.at(0), CV_LOAD_IMAGE_COLOR);
-    Mat ig_1 = imread(images.at(1), CV_LOAD_IMAGE_COLOR);
-    Mat ig_2 = imread(images.at(2), CV_LOAD_IMAGE_COLOR);
+/**
+ * @brief - find objects by threshold and findContours
+ * Houses are warmer, than anything else.
+ * Need to find all of them and mark center of each
+ * @param image
+ */
+void findHouse(string image)
+{
+    Mat ig_0 = imread(image, CV_LOAD_IMAGE_GRAYSCALE);
+    /// All works with copy of image
+    Mat ig_0_cp;
+    ig_0.copyTo(ig_0_cp);
+    /// Set to binary mode
+    threshold(ig_0_cp, ig_0_cp, 220, 255, THRESH_BINARY);
+    /// Use morphology to throw away noises
+    Mat kernel = getStructuringElement(CV_SHAPE_RECT, Size(3, 3));
+	erode(ig_0_cp, ig_0_cp, kernel, Point(-1, -1), 1);
+    dilate(ig_0_cp, ig_0_cp, kernel, Point(-1,-1), 4);
+    /// Find contours of object
+    vector<vector<Point>> contours;
+    findContours(ig_0_cp, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    /// Higlight object by it's contour
+    ig_0.copyTo(ig_0_cp);
+    cvtColor(ig_0_cp, ig_0_cp, CV_GRAY2BGR);
+    polylines(ig_0_cp, contours, true, Vec3b(0, 0, 255), 2, 8);
 
-    Mat ig_0_cp = ig_0.clone();
-    Mat cont;
-
-//    double thresh = 175;
-
-    cvtColor(ig_0, ig_0_cp, CV_BGR2GRAY);
-//    threshold(ig_0_cp, ig_0_cp, *thresh, 100, THRESH_BINARY);
-//    findContours(ig_0, ig_0_cp, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-//    Canny(ig_0, ig_0_cp, 0, 1529);
-    imshow("lab3_", ig_0);
-    imshow("lab3", ig_0_cp);
+    imshow("lab3.1_transformed", ig_0_cp);
+    waitKey(0);
 }
 
-void callbackHouse(int thresh, void*) {}
+void callbackHouse(int thresh, void*)
+{
+
+}
 /// *****************************************************
 /// Engines are warmer than anything else.
 /// Need to find and mark center.
 /// *****************************************************
-void findEngine(vector<string> images) {
+void findEngine(vector<string> images)
+{
     Mat ig_7 = imread(images.at(7), CV_LOAD_IMAGE_COLOR);
     Mat ig_8 = imread(images.at(8), CV_LOAD_IMAGE_COLOR);
     Mat ig_9 = imread(images.at(9), CV_LOAD_IMAGE_COLOR);
@@ -86,7 +107,8 @@ void findEngine(vector<string> images) {
 /// *****************************************************
 /// Find colorful cap and circle around it color of robots' team.
 /// *****************************************************
-void findRobots(vector<string> images) {
+void findRobots(vector<string> images)
+{
     Mat ig_5 = imread(images.at(5), CV_LOAD_IMAGE_COLOR);
     Mat ig_6 = imread(images.at(6), CV_LOAD_IMAGE_COLOR);
 }
@@ -94,7 +116,8 @@ void findRobots(vector<string> images) {
 /// *****************************************************
 /// Find lamp and mark it.
 /// *****************************************************
-void findLamp(vector<string> images) {
+void findLamp(vector<string> images)
+{
     Mat ig_5 = imread(images.at(5), CV_LOAD_IMAGE_COLOR);
     Mat ig_6 = imread(images.at(6), CV_LOAD_IMAGE_COLOR);
 }
@@ -102,7 +125,8 @@ void findLamp(vector<string> images) {
 /// *****************************************************
 /// Find the robot closest to the lamp and mark it's mass center.
 /// *****************************************************
-void findNearestRobot(vector<string> images) {
+void findNearestRobot(vector<string> images)
+{
     Mat ig_5 = imread(images.at(5), CV_LOAD_IMAGE_COLOR);
     Mat ig_6 = imread(images.at(6), CV_LOAD_IMAGE_COLOR);
 
@@ -111,7 +135,8 @@ void findNearestRobot(vector<string> images) {
 /// *****************************************************
 /// Find deffective wrenches and mark them.
 /// *****************************************************
-void findWrench(vector<string> images) {
+void findWrench(vector<string> images)
+{
     Mat ig_3 = imread(images.at(3), CV_LOAD_IMAGE_COLOR);
     Mat ig_4 = imread(images.at(4), CV_LOAD_IMAGE_COLOR);
 
