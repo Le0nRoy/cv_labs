@@ -30,25 +30,23 @@ void lab3()
 
     /// Third part (robots, lamp)
 //    imgForFunc = images.at(5);
-//    imgForFunc = images.at(6);
-//    findRobots(imgForFunc);
+    imgForFunc = images.at(6);
+    findRobots(imgForFunc);
 
     /// Fourth part (wrench)
-    imgForFunc = images.at(3);
-    string wrenchTemplate = images.at(4);
-    findWrench(imgForFunc, wrenchTemplate);
+//    imgForFunc = images.at(3);
+//    string wrenchTemplate = images.at(4);
+//    findWrench(imgForFunc, wrenchTemplate);
 
     destroyAllWindows();
 }
-/**
- * @brief - Loads files with images
- * @return - vector with filenames of images
- */
+
+/// Good
 vector<string> getFilesLab3()
 {
     vector<string> images(15); // 12 pictures for lab3, but allocate more memory as stock
 
-    string wayToFolder = "../3/Task/img_zadan"; // Way from home to folder with folders that contain images
+    string wayToFolder = "../3/Tasks/img_zadan"; // Way from home to folder with folders that contain images
 
     /// allababah
     images.at(0)  = wayToFolder+"/allababah/ig_0.jpg";
@@ -72,12 +70,8 @@ vector<string> getFilesLab3()
 
     return images;
 }
-/**
- * @brief - find objects with binary image
- * Houses are warmer, than anything else.
- * Need to find all of them and mark center of each
- * @param image - image with object to detect
- */
+
+/// Good
 void findHouse(string image)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_GRAYSCALE);
@@ -90,7 +84,6 @@ void findHouse(string image)
     Mat imgGRAY;
     img.copyTo(imgGRAY);
     /// Set to binary mode
-//    createTrackbar("findHouse", "lab3", &thresh, 255, findHouse, images);
     threshold(imgGRAY, imgGRAY, 220, 255, THRESH_BINARY);
     /// Use morphology to throw away noises
     Mat kernel = getStructuringElement(CV_SHAPE_RECT, Size(3, 3));
@@ -103,16 +96,25 @@ void findHouse(string image)
     img.copyTo(imgGRAY);
     cvtColor(imgGRAY, imgGRAY, CV_GRAY2BGR);
     polylines(imgGRAY, contours, true, Vec3b(0, 0, 255), 2, 8);
+    /// Find mass center of each house
+    Moments house_moments;
+    for (int i = 0; i < contours.size(); i++)
+    {
+        /// Check if contour length is not too low
+        if (contours.at(i).size() > 10)
+        {
+            house_moments = moments(contours.at(i) );
+            int x = house_moments.m10 / house_moments.m00;
+            int y = house_moments.m01 / house_moments.m00;
+            circle(imgGRAY, Point(x, y), 5, Vec3b(0, 0, 255), -1);
+        }
+    }
 
     imshow("lab3.1_transformed", imgGRAY);
     waitKey(0);
 }
-/**
- * @brief - find objects with HSV
- * Engines are warmer than anything else.
- * Need to find and mark center.
- * @param image - image with object to detect
- */
+
+/// Good
 void findEngine(string image)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
@@ -141,14 +143,24 @@ void findEngine(string image)
     img.copyTo(img_copy);
     cvtColor(img_copy, img_copy, CV_HSV2BGR);
     polylines(img_copy, contours, true, Vec3b(0, 0, 255), 2, 8);
+    /// Find mass center of each house
+    Moments house_moments;
+    for (int i = 0; i < contours.size(); i++)
+    {
+        /// Check if contour length is not too low
+        if (contours.at(i).size() > 10)
+        {
+            house_moments = moments(contours.at(i) );
+            int x = house_moments.m10 / house_moments.m00;
+            int y = house_moments.m01 / house_moments.m00;
+            circle(img_copy, Point(x, y), 5, Vec3b(0, 0, 0), -1);
+        }
+    }
 
     imshow("lab3.2_transformed", img_copy);
     waitKey(0);
 }
-/**
- * @brief - Find colorful cap and circle around it color of robots' team.
- * @param image - image with object to detect
- */
+
 void findRobots(string image)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
@@ -159,9 +171,6 @@ void findRobots(string image)
     }
 }
 
-/// *****************************************************
-/// Find lamp and mark it.
-/// *****************************************************
 void findLamp(string image)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
@@ -172,9 +181,6 @@ void findLamp(string image)
     }
 }
 
-/// *****************************************************
-/// Find the robot closest to the lamp and mark it's mass center.
-/// *****************************************************
 void findNearestRobot(string image)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
@@ -186,12 +192,11 @@ void findNearestRobot(string image)
 
 }
 
-/// *****************************************************
-/// Find deffective wrenches and mark them.
-/// *****************************************************
+/// Good
 void findWrench(string image, string objectTemplate)
 {
     Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
+    resize(img, img, Size(), 0.75, 0.75);
     Mat temp = imread(objectTemplate, CV_LOAD_IMAGE_COLOR);
     if (img.empty() )
     {
@@ -203,15 +208,38 @@ void findWrench(string image, string objectTemplate)
         cout << "findWrench() : Failed to load template" << endl;
         return;
     }
-    /// All works with copy of image (resized not to deal with such a giant)
+    ///*** Find contours of main image
+    // Work with copy of image (resized not to deal with such a giant)
     Mat img_copy;
-    img.copyTo(img_copy);
-    resize(img, img, Size(), 0.75, 0.75);
-    /// All works with copy of image
+    cvtColor(img, img_copy, COLOR_BGR2GRAY);
+    // Get binary image for simplier compare
+    threshold(img_copy, img_copy, 240, 255, THRESH_BINARY_INV);
+    // Find contours of objects
+    vector<vector<Point>> contours;
+    findContours(img_copy, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    ///*** Find contours of template
+    // All works with copy of image
     Mat temp_copy;
-    temp.copyTo(temp_copy);
+    cvtColor(temp, temp_copy, COLOR_BGR2GRAY);
+    threshold(temp_copy, temp_copy, 240, 255, THRESH_BINARY_INV);
+    vector<vector<Point>> temp_contours;
+    findContours(temp_copy, temp_contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    /// Compare mask with each object and higlight in different color if similar or not
+    for (int i = 0; i < contours.size(); i++)
+    {
+        float diff = (float)matchShapes(contours.at(i), temp_contours.at(0), CV_CONTOURS_MATCH_I2, 0);
+        /// If not big difference, then object is similar to template
+        /// (may be difference is counted as percentage?)
+        if (abs(diff) > 0.9)
+        {
+            polylines(img, contours.at(i), true, Vec3b(0, 255, 0), 2, 8);
+        }
+        else
+        {
+            polylines(img, contours.at(i), true, Vec3b(0, 0, 255), 2, 8);
+        }
+    }
 
     imshow("img", img);
-    imshow("template", temp);
     waitKey(0);
 }

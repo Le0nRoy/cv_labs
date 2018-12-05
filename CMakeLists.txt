@@ -14,6 +14,8 @@ add_executable(CV_labs
         3/lab3.cpp
         3/lab3.h
         4/lab4.cpp
-        4/lab4.h)
+        4/lab4.h
+        # Just for keeping bracket on another string
+        )
 
 target_link_libraries(CV_labs ${OpenCV_LIBS})

@@ -23,6 +23,7 @@ void lab4()
 //    waitKey(0);
 }
 
+/// Good
 vector<string> getFilesLab4()
 {
     vector<string> images(4);
@@ -35,6 +36,7 @@ vector<string> getFilesLab4()
     return images;
 }
 
+/// Good
 Mat count_W(int signalSize, bool inverse)
 {
     int angleSign = inverse ? 1 : -1;

@@ -11,9 +11,10 @@
 #include <vector>
 #include <string>
 
-/// *****************************************************
-/// Loads files with images.
-/// *****************************************************
+/**
+ * @brief - Loads files with images
+ * @return - vector with filenames of images
+ */
 std::vector<std::string> getFilesLab4();
 
 void lab4();

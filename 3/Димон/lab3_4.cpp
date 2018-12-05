@@ -24,10 +24,11 @@ int main()
 	//��������� gk_tmplt
 	threshold(img, timg, 240, 255, THRESH_BINARY);
 
+	/// Find contours of mask
 	findContours(timg, tnts, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 	cvtColor(img, img, CV_GRAY2BGR);//������� � RGB, ����� ������� ������������ ��������
 	polylines(img, tnts[0], true, Vec3b(0, 255, 0), 2, 8);
-	
+	/// Compare mask with each object and higlight in different color if similar or not
 	for (int i = 0; i < cnts.size(); i++)
 	{
 		float diff = matchShapes(cnts[i], tnts[0], CV_CONTOURS_MATCH_I2, 0);//�������� ��������
@@ -36,7 +37,10 @@ int main()
 		{
 			polylines(input_img, cnts[i], true, Vec3b(0, 255, 0), 2, 8);
 		}
-		else polylines(input_img, cnts[i], true, Vec3b(0, 0, 255), 2, 8);
+		else
+        {
+		    polylines(input_img, cnts[i], true, Vec3b(0, 0, 255), 2, 8);
+        }
 	}
 	imshow("input_img", input_img);
 	imshow("template", img);

@@ -15,7 +15,8 @@ void versionOpenCV();
 /// *****************************************************
 /// OpenCV version   : 3.2.0
 /// *****************************************************
-int main() {
+int main()
+{
     versionOpenCV();
     //vector<string> filesList =
 //    lab1();
@@ -28,7 +29,8 @@ int main() {
 /// *****************************************************
 /// Loads files with images. (Not ready)
 /// *****************************************************
-void getFiles() {
+void getFiles()
+{
     vector<string> images(15);
 
     /*
@@ -52,6 +54,7 @@ void getFiles() {
 /// *****************************************************
 /// Use this to get your OpenCV version.
 /// *****************************************************
-void versionOpenCV() {
+void versionOpenCV()
+{
     cout << endl << "OpenCV version : " << CV_VERSION << endl << endl;
 }
