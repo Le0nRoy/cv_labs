@@ -14,47 +14,32 @@
 using namespace std;
 using namespace cv;
 
-const float pi = 3.14159;
-//mutex readOrWriteW2;
-//mutex readOrWriteW1;
-
 void lab4()
 {
-    vector<string> images(3);
+    vector<string> images(4);
     images = getFilesLab4();
 
-    custom_DFT( images.at(0) );
+    custom_DFT( images.at(3) );
 //    waitKey(0);
 }
 
-/// *****************************************************
-/// Loads files with images.
-/// *****************************************************
 vector<string> getFilesLab4()
 {
-    vector<string> images(3);
+    vector<string> images(4);
 
-    images.at(0)  = "../4/ig_0.jpg";
-    images.at(1)  = "../4/ig_1.jpg";
-    images.at(2)  = "../4/ig_2.png";
+    images.at(0) = "../4/ig_0.jpg";
+    images.at(1) = "../4/ig_1.jpg";
+    images.at(2) = "../4/ig_2.jpg";
+    images.at(3) = "../ig_.jpg";
 
     return images;
 }
 
-/// Throw away return value and make function, that is reading from file
-/**
- * @brief - Counts coefficient W for fourier transformation
- * @param signalSize - number of cols of image
- * @param inverse - if true, than counts coefficients for inverse fourier transformation
- * @return - Mat with all counted coefficients
- *      [0] - Real part
- *      [1] - Imaginary part
- */
 Mat count_W(int signalSize, bool inverse)
 {
     int angleSign = inverse ? 1 : -1;
 
-    float angle = 2 * angleSign * pi / signalSize;
+    float angle = 2 * angleSign * CV_PI / signalSize;
 
     // [0] - Real
     // [1] - Imaginary
@@ -73,8 +58,9 @@ Mat count_W(int signalSize, bool inverse)
         W.at<Vec2f>(0,i)[1] = 0.0;
     }
 
-    //C_[k] = C*C_[k-1] - S*S_[k-1]
-    //S_[k] = S*C_[k-1] + C*S_[k-1]
+    // C_[k] = C*C_[k-1] - S*S_[k-1]
+    // S_[k] = S*C_[k-1] + C*S_[k-1]
+    // Iterative method for counting sin and cos
     float cos_ = cos(angle);
     float sin_ = sin(angle);
 
@@ -104,125 +90,130 @@ Mat count_W(int signalSize, bool inverse)
     return W;
 }
 
-/**
- * @brief - counts first (for all n2 and k2 elements) sum of DFT
- * @param img - image for which to count sum
- * @param W - coefficients
- * @return - new image
- */
 Mat count_DFT_first_sum(const Mat img, const Mat W)
 {
     const int numOfRows = img.rows;
     const int numOfCols = img.cols;
 
-    Mat transformedImage(numOfRows, numOfCols, CV_32FC1);
-
+    Mat transformedImage(numOfRows, numOfCols, CV_32FC2);
+    // Count first sum
     for (int n1 = 0; n1 < numOfRows; n1++)
     {
-        for (int k = 0; k < numOfCols; k++)
+        for (int k2 = 0; k2 < numOfCols; k2++)
         {
-            float sumRe2 = 0;
-            float sumIm2 = 0;
-            float s = 0;
-            float sW = 0;
+            complex<float> sum2 (0.0f, 0.0f);
             for (int n2 = 0; n2 < numOfCols; n2++)
             {
-                // First sum of real parts for element (k1, k2)
-                sumRe2 += img.at<uchar>(n1, n2) * W.at<Vec2f>(k,n2)[0];
-
-                s = img.at<uchar>(n1, n2);
-                sW = W.at<Vec2f>(k,n2)[0];
-                // First sum of imaginary parts for element (k1, k2)
-                sumIm2 += img.at<uchar>(n1, n2) * W.at<Vec2f>(k,n2)[1];
+                sum2 += (float)img.at<uchar>(n1, n2) *
+                        complex<float>(W.at<Vec2f>(k2,n2)[0], W.at<Vec2f>(k2,n2)[1]);
             }
-            s = sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
-            transformedImage.at<float>(n1, k) = sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
-//            transformedImage.at<float>(n1, k) = (uchar)sqrt(sumRe2*sumRe2 + sumIm2*sumIm2);
+            /// Return matrix with complex numbers
+            transformedImage.at<Vec2f>(n1, k2)[0] = sum2.real();
+            transformedImage.at<Vec2f>(n1, k2)[1] = sum2.imag();
+        }
+    }
+    // Count second sum
+    for (int n2 = 0; n2 < numOfCols; n2++)
+    {
+        for (int k1 = 0; k1 < numOfRows; k1++)
+        {
+            complex<float> sum1 (0.0f, 0.0f);
+            for (int n1 = 0; n1 < numOfRows; n1++)
+            {
+                /// Multiply first sum and W (with rules of complex numbers)
+                sum1 += complex<float>(transformedImage.at<Vec2f>(n1, n2)[0], transformedImage.at<Vec2f>(n1, n2)[0] ) *
+                        complex<float>(W.at<Vec2f>(k1,n1)[0], W.at<Vec2f>(k1,n1)[1] );
+            }
+            /// Return matrix with complex numbers
+            transformedImage.at<Vec2f>(k1, n2)[0] = sum1.real();
+            transformedImage.at<Vec2f>(k1, n2)[1] = sum1.imag();
         }
     }
     return transformedImage;
 }
 
-/**
- * @brief - counts second (for all n1 and k1 elements) sum of DFT
- * @param img - image for which to count sum
- * @param W - coefficients
- * @return - new image
- */
 Mat count_DFT_second_sum(const Mat img, const Mat W)
 {
     const int numOfRows = img.rows;
     const int numOfCols = img.cols;
 
-    Mat transformedImage(numOfRows, numOfCols, CV_32FC1);
+    Mat transformedImage(numOfRows, numOfCols, CV_32FC2);
 
     for (int n2 = 0; n2 < numOfCols; n2++)
     {
-        for (int k = 0; k < numOfRows; k++)
+        for (int k1 = 0; k1 < numOfRows; k1++)
         {
-            float sumRe1 = 0;
-            float sumIm1 = 0;
+            complex<float> sum1 (0.0f, 0.0f);
             for (int n1 = 0; n1 < numOfRows; n1++)
             {
-                // First sum of real parts for element (k1, k2)
-                sumRe1 += img.at<float>(n1, n2) * W.at<Vec2f>(n1, k)[0];
-                // First sum of imaginary parts for element (k1, k2)
-                sumIm1 += img.at<float>(n1, n2) * W.at<Vec2f>(n1, k)[1];
+                /// Multiply first sum and W (with rules of complex numbers)
+                sum1 += complex<float>(img.at<Vec2f>(n1, n2)[0], img.at<Vec2f>(n1, n2)[0] ) *
+                        complex<float>(W.at<Vec2f>(k1,n1)[0], W.at<Vec2f>(k1,n1)[1] );
             }
-            transformedImage.at<float>(k, n2) = sqrt(sumRe1*sumRe1 + sumIm1*sumIm1);
+            /// Return matrix with complex numbers
+            transformedImage.at<Vec2f>(k1, n2)[0] = sum1.real();
+            transformedImage.at<Vec2f>(k1, n2)[1] = sum1.imag();
         }
     }
     return transformedImage;
 }
 
-/// *****************************************************
-/// Discrete fouurier transformation (make with InputArray and OutputArray)
-/// *****************************************************
-/**
- * @brief Discrete fouurier transformation (need vodka to understand)
- * (make with InputArray and OutputArray)
- * (make threads)
- * @param image - image to transform
- */
-void custom_DFT(const string imgname)
+void custom_DFT(const string img_name)
 {
     // Need to expand to optimum size
-    Mat img = imread(imgname.data(), CV_LOAD_IMAGE_GRAYSCALE);
-    const int numOfCols = img.cols;
-    const int numOfRows = img.rows;
+    Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
+    if (!img.empty() )
+    {
+        const int numOfCols = img.cols;
+        const int numOfRows = img.rows;
 
-    TickMeter rows_timer;
-    TickMeter matrix_timer;
+        // Set timer
+        TickMeter matrix_timer;
 
-    int signalSize = (numOfCols < numOfRows) ? numOfRows : numOfCols;
-    Mat W(signalSize, signalSize, CV_32FC2);
-    W = count_W(signalSize);
+        // Get matrix with all coefficients
+        int signalSize = (numOfCols < numOfRows) ? numOfRows : numOfCols;
+        Mat W(signalSize, signalSize, CV_32FC2);
+        matrix_timer.reset();
+        matrix_timer.start();
+        W = count_W(signalSize);
+        matrix_timer.stop();
+        cout << "W time: " << matrix_timer.getTimeSec() << "sec" << endl;
 
-    Mat img1(numOfRows, numOfCols, CV_32FC1);
+        // New matrix for DFT transformed image
+        Mat fourier_sums(numOfRows, numOfCols, CV_32FC2);
 
-    matrix_timer.reset();
-    matrix_timer.start();
-    img1 = count_DFT_first_sum(img, W);
-    matrix_timer.stop();
-    cout << "First sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
-    imshow("My_fourier", img);
-    waitKey(0);
+        matrix_timer.reset();
+        matrix_timer.start();
+        fourier_sums = count_DFT_first_sum(img, W);
+        matrix_timer.stop();
+        cout << "First sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
 
-    matrix_timer.reset();
-    matrix_timer.start();
-    img1 = count_DFT_second_sum(img1, W);
-    matrix_timer.stop();
-    cout << "Second sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+//        matrix_timer.reset();
+//        matrix_timer.start();
+//        fourier_sums = count_DFT_second_sum(fourier_sums, W);
+//        matrix_timer.stop();
+//        cout << "Second sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
 
+        // Split sums on real and imag parts
+        Mat fourier_split[2] = {Mat(img.rows, img.cols, CV_32FC1), Mat(img.rows, img.cols, CV_32FC1)};
+        split(fourier_sums, fourier_split);
+        // Get magnitude of DFT
+        Mat img_fourier;
+        magnitude(fourier_split[0], fourier_split[1], img_fourier);
+        // Switch to logarithmic scale
+        img_fourier += Scalar::all(1);
+        log(img_fourier, img_fourier);
+        // Normalize spectrum
+        normalize(img_fourier, img_fourier, 0, 1, NORM_MINMAX);
 //    int m = getOptimalDFTSize(img.rows);
 //    int n = getOptimalDFTSize(img.cols);
 //    Mat imgConverted(m, n, CV_32FC1, Scalar::all(0));// = img.clone();
-    Mat imgConverted;//(img.rows, img.cols, CV_32FC1, Scalar::all(0));// = img.clone();
-    img.convertTo(imgConverted, CV_32FC1);
-    dft(imgConverted, imgConverted);
-    imshow("img_at_finish", img);
-    imshow("OpenCV_fourier", imgConverted);
-    imshow("My_fourier", img1);
-    waitKey(0);
-//    thread countW2(); // Need to make count_W() with OutputArray
+        imshow("img_at_finish", img);
+        imshow("My_fourier", img_fourier);
+        waitKey(0);
+    }
+    else
+    {
+        cout << "custom_DFT() : Failed to load image !" << endl;
+    }
 }

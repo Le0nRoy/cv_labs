@@ -1,7 +1,7 @@
 #include <opencv2\opencv.hpp>
 #include <complex>
-#define _USE_MATH_DEFINES //для M_PI
-#include <math.h> //для M_PI
+#define _USE_MATH_DEFINES //??? M_PI
+#include <math.h> //??? M_PI
 using namespace cv;
 using namespace std;
 
@@ -29,7 +29,8 @@ int main()
 	int rows = img.rows;
 	int cols = img.cols;
 
-	//Массивы для сумм
+	//??????? ??? ????
+	// Make 2 zeros arrays
 	complex<double>** sum1 = new complex<double>*[rows];
 	complex<double>** sum2 = new complex<double>*[rows];
 	for (int i = 0; i < rows; i++)
@@ -43,24 +44,26 @@ int main()
 		}
 	}
 
-	//ДПФ по строкам(одномерное)
-	for (int i = 0; i < rows; i++)	//Номер строки
+	//??? ?? ???????(??????????)
+	// Count first sum
+	for (int i = 0; i < rows; i++)	//????? ??????
 	{
-		for (int k1 = 0; k1 < cols; k1++)	//Номер столбца
+		for (int k1 = 0; k1 < cols; k1++)	//????? ???????
 		{
-			for (int n1 = 0; n1 < cols; n1++)	//Номер гармоники
+			for (int n1 = 0; n1 < cols; n1++)	//????? ?????????
 			{
 				sum1[i][k1] += (double)img.at<uchar>(i, n1)*complex<double>(cos(-fi*n1*k1), sin(-fi*n1*k1));
 			}
 		}
 	}
 
-	//ДПФ по столбцам(одномерное)
-	for (int j = 0; j < cols; j++)	//Номер столбца
+	//??? ?? ????????(??????????)
+	// Count second sum
+	for (int j = 0; j < cols; j++)	//????? ???????
 	{
-		for (int k2 = 0; k2 < rows; k2++)	//Номер строки
+		for (int k2 = 0; k2 < rows; k2++)	//????? ??????
 		{
-			for (int n2 = 0; n2 < rows; n2++)	//Номер гармоники
+			for (int n2 = 0; n2 < rows; n2++)	//????? ?????????
 			{
 				sum2[k2][j] += sum1[n2][j] * complex<double>(cos(-fi*n2*k2), sin(-fi*n2*k2));
 			}
