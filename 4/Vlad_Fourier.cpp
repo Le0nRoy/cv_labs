@@ -28,35 +28,45 @@ int main() {
 		show_fourier(dft_img, "CV DFT");
 		char action = waitKey(0);
 		float kernel[3][3];
-		switch (action) {
-		case 'h': {
+		switch (action)
+		{
+		case 'h':
+		    {
 			float sobel_hor[][3] = { -1, -2, -1,
 									 0, 0, 0,
 									1, 2, 1 };
-			for (int i = 0; i < 3; i++) {
-				for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
 					kernel[i][j] = sobel_hor[i][j];
 				}
 			}
 			break;
 		}
-		case 'v': {
+		case 'v':
+		    {
 			float sobel_ver[][3] = { -1, 0, 1,
 									-2, 0, 2,
 									-1, 0, 1 };
-			for (int i = 0; i < 3; i++) {
-				for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
 					kernel[i][j] = sobel_ver[i][j];
 				}
 			}
 			break;
 		}
-		case 'l': {
+		case 'l':
+		    {
 			float laplase[][3] = { 0, 1, 0,
 								  1, -4, 1,
 								  0, 1, 0 };
-			for (int i = 0; i < 3; i++) {
-				for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
 					kernel[i][j] = laplase[i][j];
 				}
 			}
@@ -66,8 +76,10 @@ int main() {
 			break;
 		}
 		Mat mat_kernel(img.size(), CV_32FC1, Scalar(0));
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
 				mat_kernel.at<float>(i, j) = kernel[i][j];
 			}
 		}
@@ -78,7 +90,7 @@ int main() {
 
 		Mat res(img.size(), CV_32FC2);
 		mulSpectrums(dft_kernel, dft_img, res, 0, 0);
-		show_fourier(res, "mulSpectrums"); // Функция красивого вывода образа Фурье 
+		show_fourier(res, "mulSpectrums"); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
 
 		Mat idft_img(img.size(), CV_32FC1);
 		dft(res, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
@@ -139,8 +151,8 @@ int main() {
 
 void show_fourier(Mat &complexI, String name) {
 	/*
-	результатом dft является двухканальное изображение
-	мы его сплитим и находим амплитуду
+	пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ dft пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	*/
 	Mat planes[2];
 	split(complexI, planes);                   // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
@@ -148,7 +160,7 @@ void show_fourier(Mat &complexI, String name) {
 	Mat magI = planes[0];
 	Mat fourier_img = magI.clone();
 
-	//чтобы отобразить в имшоу
+	//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
 	fourier_img += Scalar::all(1);
 	log(fourier_img, fourier_img);
 	// rearrange the quadrants of Fourier image  so that the origin is at the image center
@@ -159,7 +171,7 @@ void show_fourier(Mat &complexI, String name) {
 }
 
 void shift_rect(Mat& fourier_img) {
-	//меняем прямоугольнички местами
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int cx = fourier_img.cols / 2;
 	int cy = fourier_img.rows / 2;
 
@@ -179,7 +191,7 @@ void shift_rect(Mat& fourier_img) {
 }
 
 void correlation(Mat img, Mat ch, String str) {
-	//создаем двухканальное изображение для dft 
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ dft 
 	Mat dft_img(img.size(), CV_32FC2);
 	img.convertTo(img, CV_32FC1);
 	Mat mean_img, std_img;
@@ -190,7 +202,7 @@ void correlation(Mat img, Mat ch, String str) {
 	dft(img, dft_img, DFT_COMPLEX_OUTPUT);
 	show_fourier(dft_img, "_img");
 
-	//дополняем искомый символ до размера изображения
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	ch.convertTo(ch, CV_32FC1);
 	Mat mean_ch, std_ch;
 	meanStdDev(ch, mean_ch, std_ch);
@@ -208,7 +220,7 @@ void correlation(Mat img, Mat ch, String str) {
 	dft(sign, dft_sign, DFT_COMPLEX_OUTPUT);
 	show_fourier(dft_sign, "_" + str);
 
-	//делаем корреляцию двух изображений
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	Mat img_sign;
 	mulSpectrums(dft_img, dft_sign, img_sign, 0, true);
 	show_fourier(img_sign, "_img_" + str);
@@ -223,7 +235,7 @@ void correlation(Mat img, Mat ch, String str) {
 	double maxVal;
 	minMaxLoc(idft_img, &minVal, &maxVal);
 	
-	//Отсекаем все ненужное и получаем точку начала символа
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	Mat idft_img_bin;
 	threshold(idft_img, idft_img_bin, (maxVal-5), 255, THRESH_BINARY_INV);
 	imshow("res_" + str, idft_img_bin);

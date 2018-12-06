@@ -169,6 +169,17 @@ void findRobots(string image)
         cout << "findRobots() : Failed to load image" << endl;
         return;
     }
+
+    Mat img_HSV;
+    resize(img, img, cv::Size(), 0.75, 0.75);
+    cvtColor(img, img_HSV, CV_BGR2HSV);
+    /// Morphology
+    Mat kernel;
+    kernel = getStructuringElement(CV_SHAPE_RECT, Size(5, 5));
+    inRange(img, Vec3b(200, 0, 0), Vec3b(255, 10, 10), img_HSV);
+
+    imshow("HSV", img_HSV);
+    waitKey(0);
 }
 
 void findLamp(string image)
