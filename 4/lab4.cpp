@@ -19,7 +19,36 @@ void lab4()
     vector<string> images(4);
     images = getFilesLab4();
 
-    custom_DFT(images.at(3) );
+    int control = getchar();
+    while (control != '0')
+    {
+        switch (control)
+        {
+            case '1':
+            {
+                custom_DFT(images.at(3));
+                destroyAllWindows();
+                break;
+            }
+            case '2':
+            {
+                dftConvolution(images.at(3), 0);
+                dftConvolution(images.at(3), 1);
+                dftConvolution(images.at(3), 2);
+                dftConvolution(images.at(3), 3);
+                destroyAllWindows();
+                break;
+            }
+            case '3':
+            {
+                cutFreq(images.at(3), false);
+                cutFreq(images.at(3), true);
+                destroyAllWindows();
+                break;
+            }
+        }
+        control = getchar();
+    }
 }
 
 /// Good
@@ -157,6 +186,8 @@ Mat count_DFT_second_sum(const Mat img, const Mat W)
 /// Good
 Mat custom_DFT(const string img_name)
 {
+    cout << "You've entered custom_DFT(). Good luck!" << endl;
+
     Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
     if (img.empty() )
     {
@@ -226,4 +257,205 @@ Mat normalize_fourier(Mat fourier_sums, string name)
 
     imshow(name + "dft", img_fourier);
     return img_fourier;
+}
+
+/// Good
+void dftConvolution(string img_name, int kernel_type)
+{
+    Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("original", img);
+
+    Mat dft_img(img.size(), CV_32FC2);
+    img.convertTo(img, CV_32FC1);
+    dft(img, dft_img, DFT_COMPLEX_OUTPUT);
+    normalize_fourier(dft_img, "CV_DFT");
+    /// Prepare kernel for convolution
+    int kernel[3][3];
+    switch (kernel_type)
+    {
+        case 0:
+        {
+            int sobel_hor[][3] = { -1, -2, -1,
+                                     0, 0, 0,
+                                     1, 2, 1 };
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    kernel[i][j] = sobel_hor[i][j];
+                }
+            }
+            break;
+        }
+        case 1:
+        {
+            int sobel_ver[][3] = { -1, 0, 1,
+                                     -2, 0, 2,
+                                     -1, 0, 1 };
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    kernel[i][j] = sobel_ver[i][j];
+                }
+            }
+            break;
+        }
+        case 2:
+        {
+            int laplase[][3] = { 0, 1, 0,
+                                   1, -4, 1,
+                                   0, 1, 0 };
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    kernel[i][j] = laplase[i][j];
+                }
+            }
+            break;
+        }
+        case 3:
+        {
+            int boxfilter[][3] = { 1, 1, 1,
+                                   1, 1, 1,
+                                   1, 1, 1 };
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    kernel[i][j] = boxfilter[i][j];
+                }
+            }
+            break;
+        }
+        default:
+        {
+            cout << "dftConvolution() : Wrong kernel type !" << endl;
+            break;
+        }
+    }
+
+    Mat mat_kernel(img.size(), CV_32FC1, Scalar(0));
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            mat_kernel.at<float>(i, j) = (float)kernel[i][j];
+        }
+    }
+
+    Mat dft_kernel(img.size(), CV_32FC2);
+    dft(mat_kernel, dft_kernel, DFT_COMPLEX_OUTPUT);
+    normalize_fourier(dft_kernel, "CV_DFT_kernel");
+
+    Mat result(img.size(), CV_32FC2);
+    mulSpectrums(dft_kernel, dft_img, result, 0, 0);
+    normalize_fourier(result, "mulSpectrums");
+
+    Mat idft_img(img.size(), CV_32FC1);
+    dft(result, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
+    normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
+    idft_img.convertTo(idft_img, CV_8UC1);
+    imshow("result", idft_img);
+    waitKey(0);
+}
+
+/// Good
+void cutFreq(string img_name, bool high)
+{
+    Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("original", img);
+
+    int zone = high ? 1 : 0;
+    Mat img_dft(img.size(), CV_32FC2);
+    img.convertTo(img, CV_32FC1);
+    dft(img, img_dft, DFT_COMPLEX_OUTPUT);
+    normalize_fourier(img_dft, "CV DFT");
+
+    Mat mat_kernel(img.size(), CV_32FC2, Scalar(zone, 0));
+    int cut_radius = img_dft.cols > img_dft.rows ? img_dft.cols / 2 : img_dft.rows / 2;
+    cut_radius -= 40;
+    circle(mat_kernel, Point(img.rows / 2, img.cols / 2), cut_radius, Scalar(1 - zone, 0), -1);
+
+    Mat res;
+    mulSpectrums(img_dft, mat_kernel, res, 0);
+    normalize_fourier(res, "res");
+
+    Mat idft_img(img.size(), CV_32FC1);
+    dft(res, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
+    normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
+    idft_img.convertTo(idft_img, CV_8UC1);
+    imshow("idft_res", idft_img);
+    waitKey(0);
+}
+
+///
+void numb_correlation()
+{
+    Mat img = imread("table.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("original", img);
+
+    Mat A = imread("A.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("A", A);
+
+    Mat seven = imread("seven.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("seven", seven);
+
+    Mat zero = imread("zero.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("zero", zero);
+
+    correlation(img.clone(), A.clone(), "A");
+    correlation(img.clone(), seven.clone(), "seven");
+    correlation(img.clone(), zero.clone(), "zero");
+}
+
+void correlation(Mat img, Mat ch, String str)
+{
+    Mat dft_img(img.size(), CV_32FC2);
+    img.convertTo(img, CV_32FC1);
+    Mat mean_img, std_img;
+    meanStdDev(img, mean_img, std_img);
+    img -= mean_img;
+    img /= std_img;
+
+    dft(img, dft_img, DFT_COMPLEX_OUTPUT);
+    normalize_fourier(dft_img, "_img");
+
+    ch.convertTo(ch, CV_32FC1);
+    Mat mean_ch, std_ch;
+    meanStdDev(ch, mean_ch, std_ch);
+    ch -= mean_ch;
+    ch /= std_ch;
+
+    Mat sign(img.size(), CV_32FC1, Scalar(0));
+    Mat roi(sign, Rect(0, 0, ch.cols, ch.rows));
+    ch.copyTo(roi);
+
+    imshow("sign" + str, sign);
+
+    Mat dft_sign(sign.size(), CV_32FC2);
+    sign.convertTo(sign, CV_32FC1);
+    dft(sign, dft_sign, DFT_COMPLEX_OUTPUT);
+    normalize_fourier(dft_sign, "_" + str);
+
+    //������ ���������� ���� �����������
+    Mat img_sign;
+    mulSpectrums(dft_img, dft_sign, img_sign, 0, true);
+    normalize_fourier(img_sign, "_img_" + str);
+
+    Mat idft_img(img.size(), CV_32FC1);
+    dft(img_sign, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
+    normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
+    idft_img.convertTo(idft_img, CV_8UC1);
+    imshow("idft_res" + str, idft_img);
+
+    double minVal;
+    double maxVal;
+    minMaxLoc(idft_img, &minVal, &maxVal);
+
+    //�������� ��� �������� � �������� ����� ������ �������
+    Mat idft_img_bin;
+    threshold(idft_img, idft_img_bin, (maxVal-5), 255, THRESH_BINARY_INV);
+    imshow("res_" + str, idft_img_bin);
 }

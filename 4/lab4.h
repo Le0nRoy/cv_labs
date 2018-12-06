@@ -56,4 +56,27 @@ cv::Mat custom_DFT(const std::string img_name);
  * @return - normalized spectrum
  */
 cv::Mat normalize_fourier(cv::Mat fourier_sums, std::string name);
+/**
+ * @brief - filter image with one of available filters
+ * uses Fourier transformation
+ * @param img_name - path to image to be processed
+ * @param kernel_type - type of 3x3 kernel of filter
+ * 0 - horizontal Sobel
+ * 1 - vertical Sobel
+ * 2 - BoxFilter
+ * 3 - Laplas
+ */
+void dftConvolution(std::string img_name, int kernel_type);
+/**
+ * @brief - cut low or high frequences
+ * @param img_name - path to image to be processed
+ * @param high - if true, cut high frequences
+ */
+void cutFreq(std::string img_name, bool high);
+
+void correlation(cv::Mat img1, cv::Mat img2);
+/**
+ *
+ */
+void numb_correlation();
 #endif //LAB3_LAB4_H

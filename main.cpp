@@ -7,7 +7,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace cv;
 
 void getFiles();
 void versionOpenCV();
@@ -21,8 +20,8 @@ int main()
     //vector<string> filesList =
 //    lab1();
 //    lab2();
-    lab3();
-//    lab4();
+//    lab3();
+    lab4();
 
     return 0;
 }

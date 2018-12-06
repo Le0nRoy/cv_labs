@@ -17,8 +17,10 @@ void correlation(Mat img, Mat sign, String str);
 int main() {
 	namedWindow("main");
 	char task = waitKey(0);
-	switch (task) {
-	case '2': {
+	switch (task)
+	{
+	case '2':
+    {
 		Mat img = imread("Lenna.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 		imshow("original", img);
 
