@@ -42,11 +42,18 @@ cv::Mat count_DFT_first_sum(const cv::Mat img, const cv::Mat W);
  */
 cv::Mat count_DFT_second_sum(const cv::Mat img, const cv::Mat W);
 /**
- * @brief Discrete fouurier transformation (need vodka to understand)
- * (make with InputArray and OutputArray)
- * (make threads)
+ * @brief Discrete fouurier transformation
+ * also makes OpenCV DFT for comparing
  * @param image - image to transform
+ * @return - Fourier transformed image
  */
-void custom_DFT(const std::string img_name);
-
+cv::Mat custom_DFT(const std::string img_name);
+/**
+ * @brief - normalize spectrum of image and make window with this image
+ * @param fourier_sums - matrix of imaginary values of spectrum
+ * @param name - additional string for window name
+ * win name = name + "dft"
+ * @return - normalized spectrum
+ */
+cv::Mat normalize_fourier(cv::Mat fourier_sums, std::string name);
 #endif //LAB3_LAB4_H

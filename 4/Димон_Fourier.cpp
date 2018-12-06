@@ -22,10 +22,6 @@ int main()
 
 	fi = 2 * M_PI / img.rows;
 
-
-
-
-
 	int rows = img.rows;
 	int cols = img.cols;
 
