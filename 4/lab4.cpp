@@ -46,6 +46,11 @@ void lab4()
                 destroyAllWindows();
                 break;
             }
+            case '4':
+            {
+                numb_correlation();
+                break;
+            }
         }
         control = getchar();
     }
@@ -393,21 +398,25 @@ void cutFreq(string img_name, bool high)
 ///
 void numb_correlation()
 {
-    Mat img = imread("table.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img = imread("../4/images/table.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("original", img);
 
-    Mat A = imread("A.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    Mat A = imread("../4/images/A.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("A", A);
-
-    Mat seven = imread("seven.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-    imshow("seven", seven);
-
-    Mat zero = imread("zero.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-    imshow("zero", zero);
-
     correlation(img.clone(), A.clone(), "A");
+    destroyAllWindows();
+
+    imshow("original", img);
+    Mat seven = imread("../4/images/seven.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("seven", seven);
     correlation(img.clone(), seven.clone(), "seven");
+    destroyAllWindows();
+
+    imshow("original", img);
+    Mat zero = imread("../4/images/zero.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    imshow("zero", zero);
     correlation(img.clone(), zero.clone(), "zero");
+    destroyAllWindows();
 }
 
 void correlation(Mat img, Mat ch, string str)
@@ -454,6 +463,7 @@ void correlation(Mat img, Mat ch, string str)
     minMaxLoc(idft_img, &minVal, &maxVal);
 
     Mat idft_img_bin;
-    threshold(idft_img, idft_img_bin, (maxVal-5), 255, THRESH_BINARY_INV);
+    threshold(idft_img, idft_img_bin, (maxVal-10), 255, THRESH_BINARY_INV);
     imshow("res_" + str, idft_img_bin);
+    waitKey(0);
 }

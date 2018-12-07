@@ -9,7 +9,8 @@ using namespace std;
 /// Remake somehow
 void lab2()
 {
-    Mat img = imread("../4/ig_0.jpg", CV_LOAD_IMAGE_COLOR);
+    Mat img = imread("../2/flowers.jpg", CV_LOAD_IMAGE_COLOR);
+    resize(img, img, Size(0, 0), 0.5, 0.5);
     Mat lib_blur = img.clone();
     Mat cust_blur = img.clone();
     Mat compare = img.clone();
@@ -32,13 +33,9 @@ void lab2()
     imshow("Custom_Filter", cust_blur);
     cout << "Custom time = " << msec_timer.getTimeMilli() << " msec" << endl;
 
-    float percentage = 0;
-    percentage = compare_filters(lib_blur, cust_blur);
-    cout << "Similarity = " << percentage*100 << "%" << endl;
-
     Mat diff = lib_blur - cust_blur;
     imshow("dif", diff);
-//    imshow("Original", img);
+    imshow("Original", img);
 
     waitKey(0);
 }
@@ -86,33 +83,4 @@ void lab_box_filter(const Mat orig, Mat res, Size filter_size)
         image_ROI.at<Vec3b>(y, x)[1] = (uint8_t)green;
         image_ROI.at<Vec3b>(y, x)[2] = (uint8_t)red;
     }
-}
-
-
-float compare_filters(Mat compare1, Mat compare2)
-{
-    int width = compare1.cols;
-    int height = compare1.rows;
-    float blue1 = 0, green1 = 0, red1 = 0;
-    float blue2 = 0, green2 = 0, red2 = 0;
-    float simil;
-
-    for (int i=0; i<width; i++)
-    {
-        for (int j = 0; j < height; j++)
-        {
-            // Gaining intensity of first image
-            blue1  += compare1.at<Vec3b>(i, j)[0]/10.0;
-            green1 += compare1.at<Vec3b>(i, j)[1]/10.0;
-            red1   += compare1.at<Vec3b>(i, j)[2]/10.0;
-
-            // Getting ratio of intensity with second image
-            blue2  += compare2.at<Vec3b>(i, j)[0]/10.0;
-            green2 += compare2.at<Vec3b>(i, j)[1]/10.0;
-            red2   += compare2.at<Vec3b>(i, j)[2]/10.0;
-        }
-    }
-    simil = (blue1+green1+red1)/((blue2+green2+red2));
-    simil = (simil < 1) ? simil : (2 - simil);
-    return simil;
 }

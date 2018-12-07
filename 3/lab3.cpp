@@ -12,11 +12,11 @@ void lab3()
     /// Load filenames of images
     vector<string> images = getFilesLab3();
     char control = getchar();
-    while (control)
+    while (control != '0')
     {
         /// Filename of image for function checking
         string imgForFunc;
-        switch (control != '0')
+        switch (control)
         {
             case '1':
             {
@@ -221,20 +221,9 @@ void findRobots(string image)
     ///** Blue pixels
     Mat blue_pixels;
     inRange(img, Vec3b(90, 23, 21), Vec3b(139, 231, 255), blue_pixels);
-    char a = 'p';
-    while (a != 'x')
-    {
-        if (a == 'e')
-        {
-            erode(blue_pixels, blue_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        }
-        if (a == 'd')
-        {
-            dilate(blue_pixels, blue_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        }
-        imshow("blue", blue_pixels);
-        a = waitKey(0);
-    }
+    erode(blue_pixels, blue_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    dilate(blue_pixels, blue_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    imshow("blue", blue_pixels);
 
     vector<vector<Point>> blue_cnts;
 
@@ -271,13 +260,9 @@ void findRobots(string image)
     //inRange(img, Vec3b(Hue_down, Saturation_down, Value_down), Vec3b(Hue_up, Saturation_up, Value_up), red_pixels); for debug
     inRange(img, Vec3b(10, 0, 0), Vec3b(160, 255, 255), red_pixels);
     bitwise_not(red_pixels, red_pixels);
-    a = 'p';
-    while (a != 'x') {
-        if (a == 'e') erode(red_pixels, red_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        if (a == 'd') dilate(red_pixels, red_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        imshow("red", red_pixels);
-        a = waitKey(0);
-    }
+    erode(red_pixels, red_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    dilate(red_pixels, red_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    imshow("red", red_pixels);
 
     vector<vector<Point>> red_cnts;
     findContours(red_pixels.clone(), red_cnts, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
@@ -312,14 +297,9 @@ void findRobots(string image)
     ///** Selecting green robots
     Mat green_pixels;
     inRange(img, Vec3b(40, 50, 133), Vec3b(90, 255, 255), green_pixels);
-    a = 'p';
-    while (a != 'x')
-    {
-        if (a == 'e') erode(green_pixels, green_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        if (a == 'd') dilate(green_pixels, green_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
-        imshow("green", green_pixels);
-        a = waitKey(0);
-    }
+    erode(green_pixels, green_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    dilate(green_pixels, green_pixels, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)), Point(-1, -1), 1);
+    imshow("green", green_pixels);
 
     vector<vector<Point>> green_cnts;
     findContours(green_pixels.clone(), green_cnts, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
@@ -356,6 +336,25 @@ void findRobots(string image)
     imshow("Target point ", target);
     waitKey(0);
 }
+
+
+//void findRobots(string image)
+//{
+//    Mat img = imread(image, CV_LOAD_IMAGE_COLOR);
+//    if (img.empty())
+//    {
+//        cout << "findEngine() : Failed to load image" << endl;
+//        return;
+//    }
+//    /// All works with copy of image
+//    Mat img_copy;
+//    img.copyTo(img_copy);
+//    // Blue
+//    inRange(img_copy, Vec3b(0, 50, 50), Vec3b(255, 150, 150), img_copy);
+//    imshow("blue", img_copy);
+//    waitKey(0);
+//
+//}
 
 int findNearestRobot(int X1, int Y1, int X2, int Y2)
 {

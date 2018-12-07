@@ -1,6 +1,7 @@
 #include "1/lab1.h"
 #include "2/lab2.h"
 #include "3/lab3.h"
+#include "3/lab3_3.h"
 #include "4/lab4.h"
 
 #include <opencv2/core.hpp>
@@ -20,7 +21,7 @@ int main()
     //vector<string> filesList =
 //    lab1();
 //    lab2();
-    lab3();
+    lab3_3();
 //    lab4();
 
     return 0;
@@ -49,6 +50,7 @@ void getFiles()
     pclose(popen_result);
      */
 }
+//    lab3();
 
 /// *****************************************************
 /// Use this to get your OpenCV version.
