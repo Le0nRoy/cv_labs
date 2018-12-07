@@ -74,7 +74,7 @@ void dftConvolution(std::string img_name, int kernel_type);
  */
 void cutFreq(std::string img_name, bool high);
 
-void correlation(cv::Mat img1, cv::Mat img2);
+void correlation(cv::Mat img1, cv::Mat img2, std::string str);
 /**
  *
  */

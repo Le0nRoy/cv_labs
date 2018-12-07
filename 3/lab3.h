@@ -31,13 +31,9 @@ void findEngine(std::string image);
  */
 void findRobots(std::string image);
 /// *****************************************************
-/// Find lamp and mark it.
-/// *****************************************************
-void findLamp(std::string image);
-/// *****************************************************
 /// Find the robot closest to the lamp and mark it's mass center.
 /// *****************************************************
-void findNearestRobot(std::string image);
+int findNearestRobot(int X1, int Y1, int X2, int Y2);
 /// *****************************************************
 /// Find deffective wrenches and mark them.
 /// *****************************************************

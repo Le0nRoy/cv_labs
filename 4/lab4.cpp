@@ -410,7 +410,7 @@ void numb_correlation()
     correlation(img.clone(), zero.clone(), "zero");
 }
 
-void correlation(Mat img, Mat ch, String str)
+void correlation(Mat img, Mat ch, string str)
 {
     Mat dft_img(img.size(), CV_32FC2);
     img.convertTo(img, CV_32FC1);
@@ -439,7 +439,6 @@ void correlation(Mat img, Mat ch, String str)
     dft(sign, dft_sign, DFT_COMPLEX_OUTPUT);
     normalize_fourier(dft_sign, "_" + str);
 
-    //������ ���������� ���� �����������
     Mat img_sign;
     mulSpectrums(dft_img, dft_sign, img_sign, 0, true);
     normalize_fourier(img_sign, "_img_" + str);
@@ -454,7 +453,6 @@ void correlation(Mat img, Mat ch, String str)
     double maxVal;
     minMaxLoc(idft_img, &minVal, &maxVal);
 
-    //�������� ��� �������� � �������� ����� ������ �������
     Mat idft_img_bin;
     threshold(idft_img, idft_img_bin, (maxVal-5), 255, THRESH_BINARY_INV);
     imshow("res_" + str, idft_img_bin);
