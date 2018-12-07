@@ -16,7 +16,7 @@ void lab3()
     {
         /// Filename of image for function checking
         string imgForFunc;
-        switch (control)
+        switch (control != '0')
         {
             case '1':
             {
@@ -354,6 +354,7 @@ void findRobots(string image)
 
     cvtColor(target, target, CV_HSV2BGR);
     imshow("Target point ", target);
+    waitKey(0);
 }
 
 int findNearestRobot(int X1, int Y1, int X2, int Y2)
