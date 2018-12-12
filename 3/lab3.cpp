@@ -3,6 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
+#include "lab3_3.h"
 
 using namespace std;
 using namespace cv;
@@ -21,8 +22,10 @@ void lab3()
             case '1':
             {
                 /// First part (houses)
-//                imgForFunc = images.at(0);
-//                imgForFunc = images.at(1);
+                imgForFunc = images.at(0);
+                findHouse(imgForFunc);
+                imgForFunc = images.at(1);
+                findHouse(imgForFunc);
                 imgForFunc = images.at(2);
                 findHouse(imgForFunc);
                 destroyAllWindows();
@@ -32,10 +35,14 @@ void lab3()
             {
                 /// Second part (engines)
                 /// may be can do smth with 9 and 11
-//                imgForFunc = images.at(7);
-//                imgForFunc = images.at(8);
-//                imgForFunc = images.at(9);
-//                imgForFunc = images.at(10);
+                imgForFunc = images.at(7);
+                findEngine(imgForFunc);
+                imgForFunc = images.at(8);
+                findEngine(imgForFunc);
+                imgForFunc = images.at(9);
+                findEngine(imgForFunc);
+                imgForFunc = images.at(10);
+                findEngine(imgForFunc);
                 imgForFunc = images.at(11);
                 findEngine(imgForFunc);
                 destroyAllWindows();
@@ -44,9 +51,8 @@ void lab3()
             case '3':
             {
                 /// Third part (robots, lamp)
-//                imgForFunc = images.at(5);
-                imgForFunc = images.at(6);
-                findRobots(imgForFunc);
+                imgForFunc = images.at(5);
+                lab3_3(imgForFunc);
                 destroyAllWindows();
                 break;
             }

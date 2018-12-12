@@ -9,6 +9,6 @@
 
 void together();
 void result_img(int mini, int maxi, cv::Vec3b color, int n);
-int lab3_3();
+int lab3_3( std::string inp_img );
 
 #endif //CV_LABS_LAB3_3_H

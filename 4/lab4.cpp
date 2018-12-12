@@ -14,20 +14,20 @@
 using namespace std;
 using namespace cv;
 
-void lab4()
+void lab4( )
 {
-    vector<string> images(4);
-    images = getFilesLab4();
+    vector < string > images(4);
+    images = getFilesLab4( );
 
-    int control = getchar();
-    while (control != '0')
+    int control = getchar( );
+    while ( control != '0' )
     {
-        switch (control)
+        switch ( control )
         {
             case '1':
             {
                 custom_DFT(images.at(3));
-                destroyAllWindows();
+                destroyAllWindows( );
                 break;
             }
             case '2':
@@ -36,30 +36,30 @@ void lab4()
                 dftConvolution(images.at(3), 1);
                 dftConvolution(images.at(3), 2);
                 dftConvolution(images.at(3), 3);
-                destroyAllWindows();
+                destroyAllWindows( );
                 break;
             }
             case '3':
             {
                 cutFreq(images.at(3), false);
                 cutFreq(images.at(3), true);
-                destroyAllWindows();
+                destroyAllWindows( );
                 break;
             }
             case '4':
             {
-                numb_correlation();
+                numb_correlation( );
                 break;
             }
         }
-        control = getchar();
+        control = getchar( );
     }
 }
 
 /// Good
-vector<string> getFilesLab4()
+vector < string > getFilesLab4( )
 {
-    vector<string> images(4);
+    vector < string > images(4);
 
     images.at(0) = "../4/ig_0.jpg";
     images.at(1) = "../4/ig_1.jpg";
@@ -70,7 +70,7 @@ vector<string> getFilesLab4()
 }
 
 /// Good
-Mat count_W(int signalSize, bool inverse)
+Mat count_W( int signalSize, bool inverse )
 {
     int angleSign = inverse ? 1 : -1;
 
@@ -83,14 +83,14 @@ Mat count_W(int signalSize, bool inverse)
     // If k or n are zero then:
     // cos(0) = 1
     // sin(0) = 0
-    for (int i = 0; i < signalSize; i++)
+    for ( int i = 0; i < signalSize; i++ )
     {
         // Fill first column
-        W.at<Vec2f>(i,0)[0] = 1.0;
-        W.at<Vec2f>(i,0)[1] = 0.0;
+        W.at < Vec2f >(i, 0)[0] = 1.0;
+        W.at < Vec2f >(i, 0)[1] = 0.0;
         // Fill first row
-        W.at<Vec2f>(0,i)[0] = 1.0;
-        W.at<Vec2f>(0,i)[1] = 0.0;
+        W.at < Vec2f >(0, i)[0] = 1.0;
+        W.at < Vec2f >(0, i)[1] = 0.0;
     }
 
     // C_[k] = C*C_[k-1] - S*S_[k-1]
@@ -101,20 +101,20 @@ Mat count_W(int signalSize, bool inverse)
 
     float cos_k_1 = 1.0;
     float sin_k_1 = 0.0;
-    for (int k = 1; k < signalSize; k++)
+    for ( int k = 1; k < signalSize; k++ )
     {
         float cos_k = cos_ * cos_k_1 - sin_ * sin_k_1;
         float sin_k = sin_ * cos_k_1 + cos_ * sin_k_1;
 
         float cos_n_1 = 1.0;
         float sin_n_1 = 0.0;
-        for (int n = 1; n < signalSize; n++)
+        for ( int n = 1; n < signalSize; n++ )
         {
             float cos_n = cos_k * cos_n_1 - sin_k * sin_n_1;
             float sin_n = sin_k * cos_n_1 + cos_k * sin_n_1;
 
-            W.at<Vec2f>(k, n)[0] = cos_n;
-            W.at<Vec2f>(k, n)[1] = sin_n;
+            W.at < Vec2f >(k, n)[0] = cos_n;
+            W.at < Vec2f >(k, n)[1] = sin_n;
 
             cos_n_1 = cos_n;
             sin_n_1 = sin_n;
@@ -126,9 +126,9 @@ Mat count_W(int signalSize, bool inverse)
 }
 
 /// Good
-Mat count_DFT_first_sum(const Mat img, const Mat W)
+Mat count_DFT_first_sum( const Mat img, const Mat W )
 {
-    if (img.empty() )
+    if ( img.empty( ))
     {
         cout << "count_DFT_first_sum() : Image is empty !" << endl;
         return img;
@@ -138,28 +138,28 @@ Mat count_DFT_first_sum(const Mat img, const Mat W)
 
     Mat transformedImage(numOfRows, numOfCols, CV_32FC2);
 
-    for (int n1 = 0; n1 < numOfRows; n1++)
+    for ( int n1 = 0; n1 < numOfRows; n1++ )
     {
-        for (int k2 = 0; k2 < numOfCols; k2++)
+        for ( int k2 = 0; k2 < numOfCols; k2++ )
         {
-            complex<float> sum2 (0.0f, 0.0f);
-            for (int n2 = 0; n2 < numOfCols; n2++)
+            complex < float > sum2(0.0f, 0.0f);
+            for ( int n2 = 0; n2 < numOfCols; n2++ )
             {
-                sum2 += (float)img.at<uchar>(n1, n2) *
-                        complex<float>(W.at<Vec2f>(k2,n2)[0], W.at<Vec2f>(k2,n2)[1]);
+                sum2 += ( float ) img.at < uchar >(n1, n2) *
+                        complex < float >(W.at < Vec2f >(k2, n2)[0], W.at < Vec2f >(k2, n2)[1]);
             }
             /// Return matrix with complex numbers
-            transformedImage.at<Vec2f>(n1, k2)[0] = sum2.real();
-            transformedImage.at<Vec2f>(n1, k2)[1] = sum2.imag();
+            transformedImage.at < Vec2f >(n1, k2)[0] = sum2.real( );
+            transformedImage.at < Vec2f >(n1, k2)[1] = sum2.imag( );
         }
     }
     return transformedImage;
 }
 
 /// Good
-Mat count_DFT_second_sum(const Mat img, const Mat W)
+Mat count_DFT_second_sum( const Mat img, const Mat W )
 {
-    if (img.empty() )
+    if ( img.empty( ))
     {
         cout << "count_DFT_second_sum() : Image is empty !" << endl;
         return img;
@@ -169,32 +169,32 @@ Mat count_DFT_second_sum(const Mat img, const Mat W)
 
     Mat transformedImage(numOfRows, numOfCols, CV_32FC2);
 
-    for (int n2 = 0; n2 < numOfCols; n2++)
+    for ( int n2 = 0; n2 < numOfCols; n2++ )
     {
-        for (int k1 = 0; k1 < numOfRows; k1++)
+        for ( int k1 = 0; k1 < numOfRows; k1++ )
         {
-            complex<float> sum1 (0.0f, 0.0f);
-            for (int n1 = 0; n1 < numOfRows; n1++)
+            complex < float > sum1(0.0f, 0.0f);
+            for ( int n1 = 0; n1 < numOfRows; n1++ )
             {
                 /// Multiply first sum and W (with rules of complex numbers)
-                sum1 += complex<float>(img.at<Vec2f>(n1, n2)[0], img.at<Vec2f>(n1, n2)[0] ) *
-                        complex<float>(W.at<Vec2f>(k1,n1)[0], W.at<Vec2f>(k1,n1)[1] );
+                sum1 += complex < float >(img.at < Vec2f >(n1, n2)[0], img.at < Vec2f >(n1, n2)[0]) *
+                        complex < float >(W.at < Vec2f >(k1, n1)[0], W.at < Vec2f >(k1, n1)[1]);
             }
             /// Return matrix with complex numbers
-            transformedImage.at<Vec2f>(k1, n2)[0] = sum1.real();
-            transformedImage.at<Vec2f>(k1, n2)[1] = sum1.imag();
+            transformedImage.at < Vec2f >(k1, n2)[0] = sum1.real( );
+            transformedImage.at < Vec2f >(k1, n2)[1] = sum1.imag( );
         }
     }
     return transformedImage;
 }
 
 /// Good
-Mat custom_DFT(const string img_name)
+Mat custom_DFT( const string img_name )
 {
     cout << "You've entered custom_DFT(). Good luck!" << endl;
 
     Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
-    if (img.empty() )
+    if ( img.empty( ))
     {
         cout << "custom_DFT() : Failed to load image !" << endl;
         return img;
@@ -210,33 +210,35 @@ Mat custom_DFT(const string img_name)
     /// New matrix for DFT sums
     Mat fourier_sums(numOfRows, numOfCols, CV_32FC2);
     /// First sum of DFT
-    matrix_timer.reset();
-    matrix_timer.start();
+    matrix_timer.reset( );
+    matrix_timer.start( );
     fourier_sums = count_DFT_first_sum(img, W);
-    matrix_timer.stop();
-    cout << "First sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+    matrix_timer.stop( );
+    cout << "First sum time: " << matrix_timer.getTimeSec( ) << "sec" << endl;
     /// Second sum of DFT
-    matrix_timer.reset();
-    matrix_timer.start();
+    matrix_timer.reset( );
+    matrix_timer.start( );
     fourier_sums = count_DFT_second_sum(fourier_sums, W);
-    matrix_timer.stop();
-    cout << "Second sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+    matrix_timer.stop( );
+    cout << "Second sum time: " << matrix_timer.getTimeSec( ) << "sec" << endl;
     /// Get image with normalized spectrum
     Mat img_fourier;
+    Mat img_fourier_lib;
+    img.convertTo(img_fourier_lib, CV_32FC1);
+    dft(img_fourier_lib, fourier_sums, DFT_COMPLEX_OUTPUT);
+    shift_rect(fourier_sums);
     img_fourier = normalize_fourier(fourier_sums, "My");
     ///** Get lib Fourier
     /// DFT sum
     Mat fourier_lib;
     img.convertTo(fourier_lib, CV_32FC2);
-    /// DFT image
-    Mat img_fourier_lib;
-    img.convertTo(img_fourier_lib, CV_32FC1);
     /// DFT transformation
-    matrix_timer.reset();
-    matrix_timer.start();
+    matrix_timer.reset( );
+    matrix_timer.start( );
     dft(img_fourier_lib, fourier_lib, DFT_COMPLEX_OUTPUT);
-    matrix_timer.stop();
-    cout << "Lib sum time: " << matrix_timer.getTimeSec() << "sec" << endl;
+    matrix_timer.stop( );
+    cout << "Lib sum time: " << matrix_timer.getTimeSec( ) << "sec" << endl;
+    shift_rect(fourier_lib);
     img_fourier_lib = normalize_fourier(fourier_lib, "lib");
 
     imshow("original_image", img);
@@ -245,7 +247,7 @@ Mat custom_DFT(const string img_name)
 }
 
 /// Good
-Mat normalize_fourier(Mat fourier_sums, string name)
+Mat normalize_fourier( Mat fourier_sums, string name )
 {
     /// Split sums on real and imag parts
     Mat fourier_split[2] = {Mat(fourier_sums.rows, fourier_sums.cols, CV_32FC1),
@@ -265,27 +267,27 @@ Mat normalize_fourier(Mat fourier_sums, string name)
 }
 
 /// Good
-void dftConvolution(string img_name, int kernel_type)
+void dftConvolution( string img_name, int kernel_type )
 {
     Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
     imshow("original", img);
 
-    Mat dft_img(img.size(), CV_32FC2);
+    Mat dft_img(img.size( ), CV_32FC2);
     img.convertTo(img, CV_32FC1);
     dft(img, dft_img, DFT_COMPLEX_OUTPUT);
     normalize_fourier(dft_img, "CV_DFT");
     /// Prepare kernel for convolution
     int kernel[3][3];
-    switch (kernel_type)
+    switch ( kernel_type )
     {
         case 0:
         {
-            int sobel_hor[][3] = { -1, -2, -1,
-                                     0, 0, 0,
-                                     1, 2, 1 };
-            for (int i = 0; i < 3; i++)
+            int sobel_hor[][3] = {-1, -2, -1,
+                                  0, 0, 0,
+                                  1, 2, 1};
+            for ( int i = 0; i < 3; i++ )
             {
-                for (int j = 0; j < 3; j++)
+                for ( int j = 0; j < 3; j++ )
                 {
                     kernel[i][j] = sobel_hor[i][j];
                 }
@@ -294,12 +296,12 @@ void dftConvolution(string img_name, int kernel_type)
         }
         case 1:
         {
-            int sobel_ver[][3] = { -1, 0, 1,
-                                     -2, 0, 2,
-                                     -1, 0, 1 };
-            for (int i = 0; i < 3; i++)
+            int sobel_ver[][3] = {-1, 0, 1,
+                                  -2, 0, 2,
+                                  -1, 0, 1};
+            for ( int i = 0; i < 3; i++ )
             {
-                for (int j = 0; j < 3; j++)
+                for ( int j = 0; j < 3; j++ )
                 {
                     kernel[i][j] = sobel_ver[i][j];
                 }
@@ -308,12 +310,12 @@ void dftConvolution(string img_name, int kernel_type)
         }
         case 2:
         {
-            int laplase[][3] = { 0, 1, 0,
-                                   1, -4, 1,
-                                   0, 1, 0 };
-            for (int i = 0; i < 3; i++)
+            int laplase[][3] = {0, 1, 0,
+                                1, -4, 1,
+                                0, 1, 0};
+            for ( int i = 0; i < 3; i++ )
             {
-                for (int j = 0; j < 3; j++)
+                for ( int j = 0; j < 3; j++ )
                 {
                     kernel[i][j] = laplase[i][j];
                 }
@@ -322,12 +324,12 @@ void dftConvolution(string img_name, int kernel_type)
         }
         case 3:
         {
-            int boxfilter[][3] = { 1, 1, 1,
-                                   1, 1, 1,
-                                   1, 1, 1 };
-            for (int i = 0; i < 3; i++)
+            int boxfilter[][3] = {1, 1, 1,
+                                  1, 1, 1,
+                                  1, 1, 1};
+            for ( int i = 0; i < 3; i++ )
             {
-                for (int j = 0; j < 3; j++)
+                for ( int j = 0; j < 3; j++ )
                 {
                     kernel[i][j] = boxfilter[i][j];
                 }
@@ -341,24 +343,26 @@ void dftConvolution(string img_name, int kernel_type)
         }
     }
 
-    Mat mat_kernel(img.size(), CV_32FC1, Scalar(0));
-    for (int i = 0; i < 3; i++)
+    Mat mat_kernel(img.size( ), CV_32FC1, Scalar(0));
+    for ( int i = 0; i < 3; i++ )
     {
-        for (int j = 0; j < 3; j++)
+        for ( int j = 0; j < 3; j++ )
         {
-            mat_kernel.at<float>(i, j) = (float)kernel[i][j];
+            mat_kernel.at < float >(i, j) = ( float ) kernel[i][j];
         }
     }
 
-    Mat dft_kernel(img.size(), CV_32FC2);
+    Mat dft_kernel(img.size( ), CV_32FC2);
     dft(mat_kernel, dft_kernel, DFT_COMPLEX_OUTPUT);
+    shift_rect(dft_kernel);
     normalize_fourier(dft_kernel, "CV_DFT_kernel");
+    shift_rect(dft_kernel);
 
-    Mat result(img.size(), CV_32FC2);
+    Mat result(img.size( ), CV_32FC2);
     mulSpectrums(dft_kernel, dft_img, result, 0, 0);
     normalize_fourier(result, "mulSpectrums");
 
-    Mat idft_img(img.size(), CV_32FC1);
+    Mat idft_img(img.size( ), CV_32FC1);
     dft(result, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
     normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
     idft_img.convertTo(idft_img, CV_8UC1);
@@ -367,18 +371,18 @@ void dftConvolution(string img_name, int kernel_type)
 }
 
 /// Good
-void cutFreq(string img_name, bool high)
+void cutFreq( string img_name, bool high )
 {
     Mat img = imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
     imshow("original", img);
 
     int zone = high ? 1 : 0;
-    Mat img_dft(img.size(), CV_32FC2);
+    Mat img_dft(img.size( ), CV_32FC2);
     img.convertTo(img, CV_32FC1);
     dft(img, img_dft, DFT_COMPLEX_OUTPUT);
     normalize_fourier(img_dft, "CV DFT");
 
-    Mat mat_kernel(img.size(), CV_32FC2, Scalar(zone, 0));
+    Mat mat_kernel(img.size( ), CV_32FC2, Scalar(zone, 0));
     int cut_radius = img_dft.cols > img_dft.rows ? img_dft.cols / 2 : img_dft.rows / 2;
     cut_radius -= 40;
     circle(mat_kernel, Point(img.rows / 2, img.cols / 2), cut_radius, Scalar(1 - zone, 0), -1);
@@ -387,7 +391,7 @@ void cutFreq(string img_name, bool high)
     mulSpectrums(img_dft, mat_kernel, res, 0);
     normalize_fourier(res, "res");
 
-    Mat idft_img(img.size(), CV_32FC1);
+    Mat idft_img(img.size( ), CV_32FC1);
     dft(res, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
     normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
     idft_img.convertTo(idft_img, CV_8UC1);
@@ -396,32 +400,32 @@ void cutFreq(string img_name, bool high)
 }
 
 ///
-void numb_correlation()
+void numb_correlation( )
 {
     Mat img = imread("../4/images/table.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("original", img);
 
     Mat A = imread("../4/images/A.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("A", A);
-    correlation(img.clone(), A.clone(), "A");
-    destroyAllWindows();
+    correlation(img.clone( ), A.clone( ), "A");
+    destroyAllWindows( );
 
     imshow("original", img);
     Mat seven = imread("../4/images/seven.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("seven", seven);
-    correlation(img.clone(), seven.clone(), "seven");
-    destroyAllWindows();
+    correlation(img.clone( ), seven.clone( ), "seven");
+    destroyAllWindows( );
 
     imshow("original", img);
     Mat zero = imread("../4/images/zero.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     imshow("zero", zero);
-    correlation(img.clone(), zero.clone(), "zero");
-    destroyAllWindows();
+    correlation(img.clone( ), zero.clone( ), "zero");
+    destroyAllWindows( );
 }
 
-void correlation(Mat img, Mat ch, string str)
+void correlation( Mat img, Mat ch, string str )
 {
-    Mat dft_img(img.size(), CV_32FC2);
+    Mat dft_img(img.size( ), CV_32FC2);
     img.convertTo(img, CV_32FC1);
     Mat mean_img, std_img;
     meanStdDev(img, mean_img, std_img);
@@ -437,13 +441,13 @@ void correlation(Mat img, Mat ch, string str)
     ch -= mean_ch;
     ch /= std_ch;
 
-    Mat sign(img.size(), CV_32FC1, Scalar(0));
+    Mat sign(img.size( ), CV_32FC1, Scalar(0));
     Mat roi(sign, Rect(0, 0, ch.cols, ch.rows));
     ch.copyTo(roi);
 
     imshow("sign" + str, sign);
 
-    Mat dft_sign(sign.size(), CV_32FC2);
+    Mat dft_sign(sign.size( ), CV_32FC2);
     sign.convertTo(sign, CV_32FC1);
     dft(sign, dft_sign, DFT_COMPLEX_OUTPUT);
     normalize_fourier(dft_sign, "_" + str);
@@ -452,7 +456,7 @@ void correlation(Mat img, Mat ch, string str)
     mulSpectrums(dft_img, dft_sign, img_sign, 0, true);
     normalize_fourier(img_sign, "_img_" + str);
 
-    Mat idft_img(img.size(), CV_32FC1);
+    Mat idft_img(img.size( ), CV_32FC1);
     dft(img_sign, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
     normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
     idft_img.convertTo(idft_img, CV_8UC1);
@@ -463,7 +467,27 @@ void correlation(Mat img, Mat ch, string str)
     minMaxLoc(idft_img, &minVal, &maxVal);
 
     Mat idft_img_bin;
-    threshold(idft_img, idft_img_bin, (maxVal-10), 255, THRESH_BINARY_INV);
+    threshold(idft_img, idft_img_bin, (maxVal - 10), 255, THRESH_BINARY_INV);
     imshow("res_" + str, idft_img_bin);
     waitKey(0);
+}
+
+void shift_rect( Mat &fourier_img )
+{
+    int cx = fourier_img.cols / 2;
+    int cy = fourier_img.rows / 2;
+
+    Mat q0(fourier_img, Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
+    Mat q1(fourier_img, Rect(cx, 0, cx, cy));  // Top-Right
+    Mat q2(fourier_img, Rect(0, cy, cx, cy));  // Bottom-Left
+    Mat q3(fourier_img, Rect(cx, cy, cx, cy)); // Bottom-Right
+
+    Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
+    q0.copyTo(tmp);
+    q3.copyTo(q0);
+    tmp.copyTo(q3);
+
+    q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
+    q2.copyTo(q1);
+    tmp.copyTo(q2);
 }

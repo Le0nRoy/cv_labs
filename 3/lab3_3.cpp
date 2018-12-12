@@ -78,9 +78,9 @@ void result_img(int mini, int maxi, Vec3b color, int n)
 	line(result, Point(imnts.m10 / imnts.m00, imnts.m01 / imnts.m00), Point(lmnts.m10 / lmnts.m00, lmnts.m01 / lmnts.m00), Vec3b(0, 0, 0), 2, 8);
 }
 
-int lab3_3()
+int lab3_3( string inp_img )
 {
-	input_img = imread("../3/Tasks/img_zadan/roboti/roi_robotov.jpg");
+	input_img = imread(inp_img);
 	resize(input_img, img, cv::Size(), 0.5, 0.5);
 	resize(input_img, input_img, cv::Size(), 0.75, 0.75);
 

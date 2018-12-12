@@ -79,4 +79,6 @@ void correlation(cv::Mat img1, cv::Mat img2, std::string str);
  *
  */
 void numb_correlation();
+
+void shift_rect(cv::Mat& fourier_img);
 #endif //LAB3_LAB4_H
