@@ -395,6 +395,7 @@ void cutFreq( string img_name, bool high )
     dft(res, idft_img, DFT_INVERSE | DFT_REAL_OUTPUT);
     normalize(idft_img, idft_img, 0.0, 255, CV_MINMAX);
     idft_img.convertTo(idft_img, CV_8UC1);
+
     imshow("idft_res", idft_img);
     waitKey(0);
 }
@@ -477,17 +478,17 @@ void shift_rect( Mat &fourier_img )
     int cx = fourier_img.cols / 2;
     int cy = fourier_img.rows / 2;
 
-    Mat q0(fourier_img, Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
-    Mat q1(fourier_img, Rect(cx, 0, cx, cy));  // Top-Right
-    Mat q2(fourier_img, Rect(0, cy, cx, cy));  // Bottom-Left
-    Mat q3(fourier_img, Rect(cx, cy, cx, cy)); // Bottom-Right
+    Mat q0(fourier_img, Rect(0,  0,  cx, cy));  // Top-Left - Create a ROI per quadrant
+    Mat q1(fourier_img, Rect(cx, 0,  cx, cy));  // Top-Right
+    Mat q2(fourier_img, Rect(0,  cy, cx, cy));  // Bottom-Left
+    Mat q3(fourier_img, Rect(cx, cy, cx, cy));  // Bottom-Right
 
     Mat tmp;                           // swap quadrants (Top-Left with Bottom-Right)
-    q0.copyTo(tmp);
-    q3.copyTo(q0);
-    tmp.copyTo(q3);
+    q0.copyTo ( tmp );
+    q3.copyTo ( q0 );
+    tmp.copyTo( q3 );
 
-    q1.copyTo(tmp);                    // swap quadrant (Top-Right with Bottom-Left)
-    q2.copyTo(q1);
+    q1.copyTo (tmp);                    // swap quadrant (Top-Right with Bottom-Left)
+    q2.copyTo (q1);
     tmp.copyTo(q2);
 }

@@ -19,8 +19,8 @@ int main()
     versionOpenCV();
     //vector<string> filesList =
 //    lab1();
-    lab2();
-//    lab3();
+//    lab2();
+    lab3();
 //    lab4();
 
     return 0;
