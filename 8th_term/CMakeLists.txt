@@ -7,7 +7,7 @@ find_package ( OpenCV REQUIRED )
 
 set ( LABS_SRC
       main.cpp
-      6/lab6.cpp
+      6/lab6_class.cpp
       )
 
 add_executable ( 8th_term
