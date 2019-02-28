@@ -2,6 +2,7 @@
 #define CV_LABS_LAB_6
 
 #include "opencv2/core.hpp"
+#include "opencv2/core/matx.hpp"
 //#include <string>
 
 class lab6_class
@@ -15,14 +16,14 @@ private:
 
     void skeletezation ( );
     void mergeLines ( );
-    void materialOfCoins ( );
+    void classifyCoins ( std::vector < cv::Vec3f > circles );
 
 public:
     lab6_class ( const std::string wayToImgCoins, const std::string wayToImgLines );
     ~lab6_class ( );
 
-    void findLines ( );
-    void findCoins ( );
+    bool findLines ( );
+    bool findCoins ( );
 
 };
 
