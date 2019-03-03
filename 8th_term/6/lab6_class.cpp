@@ -21,8 +21,8 @@ lab6_class::lab6_class ( const string wayToImgCoins, const string wayToImgLines 
     {
         coinsLoaded = true;
     }
-    lines = imread ( wayToImgLines, CV_LOAD_IMAGE_COLOR );
-    if ( lines.empty ( ) )
+    lines.open ( wayToImgLines, CAP_ANY );
+    if ( !lines.isOpened ( ) )
     {
         cout << "lab6_class () : Lines failed to load !" << endl;
         linesLoaded = false;
@@ -43,19 +43,76 @@ bool lab6_class::findLines ( )
         cout << "findLines () : Lines are not loaded !" << endl;
         return false;
     }
-    skeletezation ( );
+    skeletezation ( 0 );
 
     mergeLines ( );
     return true;
 }
 
-void lab6_class::skeletezation ( )
+/**
+ * Perform one thinning iteration.
+ * Normally you wouldn't call this function directly from your code.
+ *
+ * \param  im    Binary image with range = 0-1
+ * \param  iter  0=even, 1=odd
+ */
+void lab6_class::skeletezation ( int iter )
 {
     if ( !linesLoaded )
     {
         cout << "skeletezation () : Lines are not loaded !" << endl;
         return;
     }
+
+    Mat thresh_img;
+    lines >> thresh_img;
+    if ( thresh_img.empty ( ) )
+    {
+        cout << "skeletezation () : Frame is not loaded !" << endl;
+    }
+    thresh_img.convertTo ( thresh_img, CV_8U );
+    cvtColor ( thresh_img, thresh_img, CV_BGR2GRAY );
+    int thresh = 100;
+    threshold ( thresh_img, thresh_img, thresh, 255, THRESH_BINARY );
+
+    Mat marker = Mat::zeros ( thresh_img.size ( ), CV_8U );
+//    threshold ( thresh_img, thresh_img, thresh, 255, THRESH_OTSU );
+//    adaptiveThreshold ( thresh_img, thresh_img, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 3, 1 );
+    string windowName = "lines_threshed";
+    namedWindow ( windowName, 1 );
+    imshow ( windowName, thresh_img );
+    waitKey ( 0 );
+    destroyWindow ( windowName );
+
+//    for ( int i = 1 ; i < lines.rows - 1 ; i++ )
+//    {
+//        for ( int j = 1 ; j < lines.cols - 1 ; j++ )
+//        {
+//            uchar p2 = lines.at < uchar > ( i - 1, j );
+//            uchar p3 = lines.at < uchar > ( i - 1, j + 1 );
+//            uchar p4 = lines.at < uchar > ( i, j + 1 );
+//            uchar p5 = lines.at < uchar > ( i + 1, j + 1 );
+//            uchar p6 = lines.at < uchar > ( i + 1, j );
+//            uchar p7 = lines.at < uchar > ( i + 1, j - 1 );
+//            uchar p8 = lines.at < uchar > ( i, j - 1 );
+//            uchar p9 = lines.at < uchar > ( i - 1, j - 1 );
+//
+//            int A = ( p2 == 0 && p3 == 1 ) + ( p3 == 0 && p4 == 1 ) +
+//                    ( p4 == 0 && p5 == 1 ) + ( p5 == 0 && p6 == 1 ) +
+//                    ( p6 == 0 && p7 == 1 ) + ( p7 == 0 && p8 == 1 ) +
+//                    ( p8 == 0 && p9 == 1 ) + ( p9 == 0 && p2 == 1 );
+//            int B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+//            int m1 = iter == 0 ? ( p2 * p4 * p6 ) : ( p2 * p4 * p8 );
+//            int m2 = iter == 0 ? ( p4 * p6 * p8 ) : ( p2 * p6 * p8 );
+//
+//            if ( A == 1 && ( B >= 2 && B <= 6 ) && m1 == 0 && m2 == 0 )
+//            {
+//                marker.at < uchar > ( i, j ) = 1;
+//            }
+//        }
+//    }
+//
+//    lines &= ~marker;
 
 }
 
@@ -111,7 +168,7 @@ void lab6_class::classifyCoins ( vector < Vec3f > circles )
         radius.at ( i ) = cvRound ( circles[ i ][ 2 ] );
         meanRadius += radius.at ( i ) / circles.size ( );
     }
-    meanShift ( coins, Rect ( meanRadius, meanRadius ),  )
+//    meanShift ( coins, Rect ( meanRadius, meanRadius ),  )
     // draw
     for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
     {

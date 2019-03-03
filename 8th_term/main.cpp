@@ -6,20 +6,30 @@ using namespace std;
 using namespace cv;
 
 const string lab6Coins = "../6/coins.jpg";
-const string lab6Lines = "";
+const string lab6Lines = "../6/line.avi";
+
+bool run_lab ( );
 
 int main ( )
 {
     cout << endl
          << "Compiled under OpenCV ver. 3.3.1" << endl
          << "Current OpenCV ver. - " << CV_VERSION << endl << endl;
+    while ( run_lab ( ) )
+    {}
+    return 0;
+}
 
+bool run_lab ( )
+{
+    bool exit_code = false;
     // here wrapping for lab num
     int taskNum = 1;
     lab6_class lab6 ( lab6Coins, lab6Lines );
     while ( taskNum )
     {
         cout << endl
+             << "-1 - to reload programm" << endl
              << "0 - to stop programm" << endl
              << "1 - for coins" << endl
              << "2 - for lines" << endl
@@ -46,6 +56,13 @@ int main ( )
             case 0:
             {
                 cout << endl << "Exiting programm..." << endl;
+                exit_code = false;
+                break;
+            }
+            case -1:
+            {
+                cout << endl << "Reloading programm..." << endl;
+                exit_code = true;
                 break;
             }
             default:
@@ -55,5 +72,5 @@ int main ( )
         }
     }
     destroyAllWindows ();
-    return 0;
+    return exit_code;
 }

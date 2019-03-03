@@ -1,6 +1,7 @@
 #ifndef CV_LABS_LAB_6
 #define CV_LABS_LAB_6
 
+#include <opencv2/videoio.hpp>
 #include "opencv2/core.hpp"
 #include "opencv2/core/matx.hpp"
 //#include <string>
@@ -9,12 +10,12 @@ class lab6_class
 {
 private:
     cv::Mat coins;
-    cv::Mat lines;
+    cv::VideoCapture lines;
 
     bool coinsLoaded;
     bool linesLoaded;
 
-    void skeletezation ( );
+    void skeletezation ( int iter );
     void mergeLines ( );
     void classifyCoins ( std::vector < cv::Vec3f > circles );
 
