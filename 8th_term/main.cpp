@@ -1,6 +1,6 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
-#include "6/lab6_class.h"
+#include "6/lab6_class_lines.h"
 
 using namespace std;
 using namespace cv;
