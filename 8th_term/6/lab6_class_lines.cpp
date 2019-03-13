@@ -1,4 +1,4 @@
-#include "lab6_class_lines.h"
+#include "lab6_class.h"
 #include <opencv2/core.hpp>
 #include "opencv2/core/matx.hpp"
 #include <opencv2/highgui.hpp>

@@ -13,7 +13,7 @@ bool run_lab ( );
 int main ( )
 {
     cout << endl
-         << "Compiled under OpenCV ver. 3.3.1" << endl
+         << "Compiled under OpenCV ver. - 3.3.1" << endl
          << "Current OpenCV ver. - " << CV_VERSION << endl << endl;
     while ( run_lab ( ) )
     {}
