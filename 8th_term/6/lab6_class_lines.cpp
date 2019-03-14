@@ -9,71 +9,112 @@
 using namespace cv;
 using namespace std;
 
+static string windowLinesOriginal = "lines_original";
 static string windowLinesThreshed = "lines_threshed";
 static string windowLinesSkeleted = "lines_skeleted";
+
+static int trackbarValueWaitTimeSkelet = 10;
+static const int trackbarLimitWaitTimeSkelet = 1000;
+
+static int trackbarValueHoughThresh = 50;
+static const int trackbarLimitHoughThresh = 100;
+
 static const int threshMaxVal = 255;
 
-int trackbarValueWaitTime = 10;
-const int trackbarLimitWaitTime = 1000;
-
-bool lab6_class::findLines ( )
+bool lab6_class::task_lines ( )
 {
     if ( !linesLoaded )
     {
-        cout << "findLines () : Lines are not loaded !" << endl;
+        cout << "task_lines () : Video is not loaded !" << endl;
         return false;
     }
-    skeletezation ( );
 
-    mergeLines ( );
+    Mat frame;
+    linesVideo.read ( frame );
+    if ( frame.empty ( ) )
+    {
+        cout << "task_lines () : Frame is not loaded !" << endl;
+        return false;
+    }
+
+    make_windows_lines ( );
+
+    createTrackbar ( "Time_skelet", windowLinesSkeleted, &trackbarValueWaitTimeSkelet, trackbarLimitWaitTimeSkelet );
+    createTrackbar ( "Hough_thresh", windowLinesOriginal, &trackbarValueHoughThresh, trackbarLimitHoughThresh );
+
+    imshow ( windowLinesOriginal, frame );
+    waitKey ( 0 );
+
+    // FIXME при повторном запуске скелетизации ( без релода ) даёт немного другой результат
+    //      случается это из-за того, что видео неустанно бежит вперед и кадры меняются
+
+    // FIXME скелетезация отвратительная
+    Mat skelet;
+    skeletezation ( frame, skelet );
+//    imshow ( windowLinesSkeleted, skelet );
+//    waitKey ( 1 );
+
+    // TODO как правильно получать вектор в Input ( Output ) Array ???
+    vector < Vec2f > lines;
+    find_lines ( skelet, lines );
+    if ( lines.empty ( ) )
+    {
+        cout << "No lines found" << endl;
+        destroy_windows_lines ( );
+        return false;
+
+    }
+
+    merge_lines ( lines );
+
+    draw_lines ( frame, lines );
+    imshow ( windowLinesOriginal, frame );
+
+    waitKey ( 0 );
+
+    destroy_windows_lines ( );
     return true;
 }
 
-void lab6_class::skeletezation ( )
+void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 {
-    if ( !linesLoaded )
+    Mat srcImg;
+    srcImg = src.getMat_ ( );
+    if ( srcImg.empty ( ) )
     {
-        cout << "skeletezation () : Lines are not loaded !" << endl;
+        cout << "skeletezation () : Image is empty !" << endl;
         return;
     }
 
     Mat thresh_img;
-    lines >> thresh_img;
-    if ( thresh_img.empty ( ) )
-    {
-        cout << "skeletezation () : Frame is not loaded !" << endl;
-    }
-    thresh_img.convertTo ( thresh_img, CV_8U );
-    cvtColor ( thresh_img, thresh_img, CV_BGR2GRAY );
-    // can't leave only line on the floor, so need later taking into account
-    // only nearest lines ( that are in the bottom )
+    skeleted_img.create ( srcImg.size ( ), CV_8U );
+    thresh_img = skeleted_img.getMat_ ( );
+
+    cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
     int thresh = 70;
     threshold ( thresh_img, thresh_img, thresh, threshMaxVal, THRESH_BINARY );
 
-    namedWindow ( windowLinesThreshed, 1 );
-    namedWindow ( windowLinesSkeleted, 1 );
-    createTrackbar ( "Time", windowLinesSkeleted, &trackbarValueWaitTime, trackbarLimitWaitTime );
     imshow ( windowLinesThreshed, thresh_img );
-    waitKey ( 0 );
-
-    Mat zero_img = Mat::zeros ( thresh_img.rows, thresh_img.cols, thresh_img.type ( ) );
+    waitKey ( 1 );
 
     bool imgChanged = true;
     int i = 0;
-    while ( imgChanged )
-//    while ( true )
+    // FIXME не работает условие выхода ( функция почему-то продолжает считаь, что все меняется )
+//    while ( imgChanged )
+    while ( i < 60 && imgChanged )
+//      while ( true )
     {
         skeletezation_iter ( thresh_img, thresh_img, 0 );
         imgChanged = skeletezation_iter ( thresh_img, thresh_img, 1 );
+
+        imshow ( windowLinesSkeleted, thresh_img );
+        waitKey ( trackbarValueWaitTimeSkelet );
+
         if ( imgChanged )
         {
-            cout << i++ << endl;
+            cout << "Итерация № " << i++ << endl;
         }
     }
-
-    waitKey ( 5000 );
-    destroyWindow ( windowLinesThreshed );
-    destroyWindow ( windowLinesSkeleted );
 }
 
 bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray &skeleted_img, int iter )
@@ -84,7 +125,6 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
         cout << " skeletezation_iter ( ) : wrong type of matrix ! " << endl;
         return false;
     }
-    Mat flagMap = Mat::zeros ( thresh_img.size ( ), CV_8U );
 
     skeleted_img.create ( thresh_img.size ( ), thresh_img.type ( ) );
     Mat dst = skeleted_img.getMat ( );
@@ -99,6 +139,9 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
 
     *******************************************/
 
+    Mat flagMap = Mat::zeros ( thresh_img.size ( ), CV_8U );
+
+    // FIXME почему-то линия в середине превращается в набор точечек, а не тонкую линию :с
     bool imgChanged = false;
     for ( int y = 1 ; y < dst.rows - 1 ; y++ )
     {
@@ -136,15 +179,17 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
 
     dst = dst - flagMap;
 
-    imshow ( windowLinesSkeleted, dst );
-    waitKey ( trackbarValueWaitTime );
-
     return imgChanged;
 }
 
-void *lab6_class::neighbours ( const _InputArray &img, Point pix, uchar *neighbs )
+void lab6_class::neighbours ( const _InputArray &img, Point pix, uchar *neighbs )
 {
     Mat image = img.getMat ( );
+    if ( image.empty ( ) )
+    {
+        cout << "neighbours () : Image is empty !" << endl;
+        return;
+    }
 
     neighbs[ 0 ] = image.at < uchar > ( pix.y - 1, pix.x );
     neighbs[ 1 ] = image.at < uchar > ( pix.y - 1, pix.x + 1 );
@@ -173,12 +218,66 @@ int lab6_class::trans ( uchar *neighb )
     }
 }
 
-void lab6_class::mergeLines ( )
+void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
+{
+    // Let Hough find all lines
+    Mat img;
+    img = skel_img.getMat_ ( );
+    if ( img.empty ( ) || img.channels ( ) != 1 )
+    {
+        cout << "find_lines ( ) : Image is not prepared for function!" << endl;
+        return;
+    }
+
+    HoughLines ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
+    cout << lines.size ( ) << endl;
+}
+
+void lab6_class::merge_lines ( std::vector < cv::Vec2f > lines )
 {
     if ( !linesLoaded )
     {
-        cout << "mergeLines () : Lines are not loaded !" << endl;
+        cout << "merge_lines () : Lines are not loaded !" << endl;
         return;
     }
     // соединять, офкорс, только сопряженные линии и на выходе наверн иметь массив массивов
+}
+
+void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines )
+{
+    Mat image;
+    image = img.getMat_ ( );
+    // Draw lines on image
+    float rho = 0;
+    float theta = 0;
+    for ( int i = 0 ; i < lines.size ( ) ; i++ )
+    {
+        rho = lines.at ( i )[ 0 ];
+        theta = lines.at ( i )[ 1 ];
+        Point pt1, pt2;
+        double a = cos ( theta );
+        double b = sin ( theta );
+        double x0 = a * rho;
+        double y0 = b * rho;
+        pt1.x = cvRound ( x0 + 1000 * ( -b ) );
+        pt1.y = cvRound ( y0 + 1000 * ( a ) );
+        pt2.x = cvRound ( x0 - 1000 * ( -b ) );
+        pt2.y = cvRound ( y0 - 1000 * ( a ) );
+        line ( image, pt1, pt2, Scalar ( 0, 0, 255 ), 2, CV_AA );
+    }
+}
+
+// TODO надо б список имен окон в виде вектора возвращать, а то че
+void lab6_class::make_windows_lines ( )
+{
+    namedWindow ( windowLinesOriginal, 1 );
+    namedWindow ( windowLinesThreshed, 1 );
+    namedWindow ( windowLinesSkeleted, 1 );
+}
+
+void lab6_class::destroy_windows_lines ( )
+{
+    destroyWindow ( windowLinesOriginal );
+    destroyWindow ( windowLinesThreshed );
+    destroyWindow ( windowLinesSkeleted );
 }

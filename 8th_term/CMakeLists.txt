@@ -13,6 +13,7 @@ set ( LABS_SRC
       6/lab6_class.cpp
       6/lab6_class_lines.cpp
       6/lab6_class_coins.cpp
+#      6/lab6_class_thrash.cpp
       )
 
 add_executable ( 8th_term

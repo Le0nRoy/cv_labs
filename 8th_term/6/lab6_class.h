@@ -13,13 +13,18 @@ public:
 
     ~lab6_class ( );
 
-    bool findCoins ( );
+    bool task_coins ( );
 
-    bool findLines ( );
+    bool task_lines ( );
+
+    /**
+     * @brief - скелетезация всего видео ( ну ооооочень тормозунто )
+     */
+    bool task_lines_video ( );
 
 private:
-    cv::Mat coins;
-    cv::VideoCapture lines;
+    cv::Mat coinsImg;
+    cv::VideoCapture linesVideo;
 
     bool coinsLoaded;
     bool linesLoaded;
@@ -29,8 +34,11 @@ private:
      * block for coins finding
      */
 
-    void classifyCoins ( std::vector < cv::Vec3f > circles );
-    void coinsHist ( );
+    void find_coins ( std::vector < cv::Vec3f > coins );
+
+    void coins_hist ( cv::OutputArray histogram );
+
+    void classify_coins ( std::vector < cv::Vec3f > circles );
 
 private:
     /**
@@ -40,9 +48,8 @@ private:
     /**
      * @brief - скелетезация нынешнего кадра
      *   * надо б переделать получение кадров, чтоб можно было одновременно и скелетизированное смотреть и обычное *
-     * @param iter
      */
-    void skeletezation ( );
+    void skeletezation ( const cv::_InputArray &src, const cv::_OutputArray &skeleted_img );
 
     /**
      * @brief - полная итерация скелитизации по алгоритму Шанг-Суня
@@ -56,7 +63,7 @@ private:
      * @param pix
      * @return - массив соседей пиксела в правильном порядке ( P2, P3 .. P9 )
      */
-    void *neighbours ( const cv::_InputArray &img, cv::Point pix, uchar *neighbs );
+    void neighbours ( const cv::_InputArray &img, cv::Point pix, uchar *neighbs );
 
     /**
      * @brief - подсчет переходов от чёрного к белому "0->1"
@@ -66,7 +73,15 @@ private:
      */
     int trans ( uchar *neighb );
 
-    void mergeLines ( );
+    void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec2f > &lines );
+
+    void merge_lines ( std::vector < cv::Vec2f > lines );
+
+    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec2f > lines );
+
+    void make_windows_lines ( );
+
+    void destroy_windows_lines ( );
 
 };
 

@@ -11,8 +11,8 @@ using namespace std;
 
 lab6_class::lab6_class ( const string wayToImgCoins, const string wayToImgLines )
 {
-    coins = imread ( wayToImgCoins, CV_LOAD_IMAGE_COLOR );
-    if ( coins.empty ( ) )
+    coinsImg = imread ( wayToImgCoins, CV_LOAD_IMAGE_COLOR );
+    if ( coinsImg.empty ( ) )
     {
         cout << "lab6_class () : Coins failed to load !" << endl;
         coinsLoaded = false;
@@ -22,8 +22,8 @@ lab6_class::lab6_class ( const string wayToImgCoins, const string wayToImgLines 
         coinsLoaded = true;
     }
 
-    lines.open ( wayToImgLines, CAP_ANY );
-    if ( !lines.isOpened ( ) )
+    linesVideo.open ( wayToImgLines, CAP_ANY );
+    if ( !linesVideo.isOpened ( ) )
     {
         cout << "lab6_class () : Lines failed to load !" << endl;
         linesLoaded = false;
