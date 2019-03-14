@@ -13,7 +13,10 @@ LIBS += -L$$(OPENCV)/bin \
 
 SOURCES += \
         main.cpp \
-    6/lab6_class.cpp
+    6/lab6_class.cpp \
+    6/lab6_class_lines.cpp \
+    6/lab6_class_coins.cpp
+#      6/lab6_class_thrash.cpp
 
 HEADERS += \
     6/lab6_class.h
