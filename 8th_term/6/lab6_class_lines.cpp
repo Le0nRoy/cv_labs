@@ -16,10 +16,12 @@ static string windowLinesSkeleted = "lines_skeleted";
 static int trackbarValueWaitTimeSkelet = 10;
 static const int trackbarLimitWaitTimeSkelet = 1000;
 
-static int trackbarValueHoughThresh = 50;
+static int trackbarValueHoughThresh = 55;
 static const int trackbarLimitHoughThresh = 100;
 
 static const int threshMaxVal = 255;
+
+bool checkNow = false;
 
 bool lab6_class::task_lines ( )
 {
@@ -45,10 +47,6 @@ bool lab6_class::task_lines ( )
     imshow ( windowLinesOriginal, frame );
     waitKey ( 0 );
 
-    // FIXME при повторном запуске скелетизации ( без релода ) даёт немного другой результат
-    //      случается это из-за того, что видео неустанно бежит вперед и кадры меняются
-
-    // FIXME скелетезация отвратительная
     Mat skelet;
     skeletezation ( frame, skelet );
 //    imshow ( windowLinesSkeleted, skelet );
@@ -92,7 +90,27 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 
     cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
     int thresh = 70;
-    threshold ( thresh_img, thresh_img, thresh, threshMaxVal, THRESH_BINARY );
+//    threshold ( thresh_img, thresh_img, thresh, threshMaxVal, THRESH_BINARY );
+    inRange ( srcImg, Scalar ( 84, 72, 61 ), Scalar ( 156, 147, 150 ), thresh_img );
+//    namedWindow ( "hsvImg", 1 );
+//    int h = 84;
+//    int s = 72;
+//    int v = 61;
+//    int hMax = 156;
+//    int sMax = 147;
+//    int vMax = 150;
+//    createTrackbar ( "h", "hsvImg", &h, 180 );
+//    createTrackbar ( "s", "hsvImg", &s, 255 );
+//    createTrackbar ( "v", "hsvImg", &v, 255 );
+//    createTrackbar ( "hMax", "hsvImg", &hMax, 180 );
+//    createTrackbar ( "sMax", "hsvImg", &sMax, 255 );
+//    createTrackbar ( "vMax", "hsvImg", &vMax, 255 );
+//    while ( waitKey ( 100 ) != 27 )
+//    {
+//        inRange ( srcImg, Scalar ( h, s, v ), Scalar ( hMax, sMax, vMax ), thresh_img );
+//        imshow ( "hsvImg", thresh_img );
+//    }
+//    destroyWindow ( "hsvImg" );
 
     imshow ( windowLinesThreshed, thresh_img );
     waitKey ( 1 );
@@ -101,7 +119,7 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
     int i = 0;
     // FIXME не работает условие выхода ( функция почему-то продолжает считаь, что все меняется )
 //    while ( imgChanged )
-    while ( i < 60 && imgChanged )
+    while ( i < 30 && imgChanged )
 //      while ( true )
     {
         skeletezation_iter ( thresh_img, thresh_img, 0 );
@@ -110,9 +128,11 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
         imshow ( windowLinesSkeleted, thresh_img );
         waitKey ( trackbarValueWaitTimeSkelet );
 
-        if ( imgChanged )
+        cout << "Iteration #" << i++ << endl;
+
+        if ( i > 30 )
         {
-            cout << "Итерация № " << i++ << endl;
+            checkNow = true;
         }
     }
 }
@@ -126,6 +146,7 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
         return false;
     }
 
+    // создаём матрицу для OutputImage
     skeleted_img.create ( thresh_img.size ( ), thresh_img.type ( ) );
     Mat dst = skeleted_img.getMat ( );
 
@@ -141,13 +162,13 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
 
     Mat flagMap = Mat::zeros ( thresh_img.size ( ), CV_8U );
 
-    // FIXME почему-то линия в середине превращается в набор точечек, а не тонкую линию :с
+    // FIXME понять, почему не прекращает искать ( imgChanged == true )
     bool imgChanged = false;
     for ( int y = 1 ; y < dst.rows - 1 ; y++ )
     {
         for ( int x = 1 ; x < dst.cols - 1 ; x++ )
         {
-            uchar neighbs[8] = { 0 };
+            uchar neighbs [ 8 ] = { 0 };
             neighbours ( dst, Point ( x, y ), neighbs );
 
             int A = trans ( neighbs );
@@ -155,7 +176,7 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
             int B = 0;
             for ( int i = 0 ; i < 8 ; i++ )
             {
-                B += neighbs[ i ];
+                B += ( neighbs[ i ] != 0 ) ? 1 : 0;
             }
 
             // step 1 -> P2 * P4 * P6
@@ -167,17 +188,36 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
             int m2 = ( iter == 0 ) ? ( neighbs[ 2 ] * neighbs[ 4 ] * neighbs[ 6 ] ) :
                      ( neighbs[ 0 ] * neighbs[ 4 ] * neighbs[ 6 ] );
 
-            if ( ( A == 1 * threshMaxVal ) &&
-                 ( B >= 2 * threshMaxVal && B <= 6 * threshMaxVal ) &&
+//            if ( ( A == 1 ) &&
+//                 ( B >= 2 * threshMaxVal && B <= 6 * threshMaxVal ) &&
+//                 ( m1 == 0 && m2 == 0 ) )
+            if ( ( A == 1 ) &&
+                 ( B >= 2 && B <= 6 ) &&
                  ( m1 == 0 && m2 == 0 ) )
             {
-                flagMap.at < uchar > ( y, x ) = 255;
+                flagMap.at < uchar > ( y, x ) = threshMaxVal;
+            }
+        }
+    }
+
+//    dst = dst - flagMap;
+
+    for ( int y = 1 ; y < dst.rows - 1 ; y++ )
+    {
+        for ( int x = 1 ; x < dst.cols - 1 ; x++ )
+        {
+            if ( flagMap.at < uchar > ( y, x ) == threshMaxVal )
+            {
+                dst.at < uchar > ( y, x ) = 0;
                 imgChanged = true;
             }
         }
     }
 
-    dst = dst - flagMap;
+    if ( checkNow )
+    {
+        imshow ( "flagMap", flagMap );
+    }
 
     return imgChanged;
 }
@@ -203,19 +243,27 @@ void lab6_class::neighbours ( const _InputArray &img, Point pix, uchar *neighbs 
 
 int lab6_class::trans ( uchar *neighb )
 {
-    if ( neighb == NULL )
+    if ( neighb == nullptr )
     {
         cout << "trans ( ) : array of neighbours does not exist" << endl;
         return -1;
     }
+
     int res = 0;
     for ( int i = 0 ; i < 7 ; i++ )
     {
-        if ( neighb[ i ] == 0 && neighb[ i + 1 ] == 1 )
+        if ( neighb[ i ] == 0 && neighb[ i + 1 ] != 0 )
         {
             res++;
         }
     }
+
+    if ( neighb[ 7 ] == 0 && neighb[ 0 ] != 0 )
+    {
+        res++;
+    }
+
+    return res;
 }
 
 void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
@@ -250,15 +298,15 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
     // Draw lines on image
     float rho = 0;
     float theta = 0;
-    for ( int i = 0 ; i < lines.size ( ) ; i++ )
+    for ( uint i = 0 ; i < lines.size ( ) ; i++ )
     {
         rho = lines.at ( i )[ 0 ];
         theta = lines.at ( i )[ 1 ];
         Point pt1, pt2;
-        double a = cos ( theta );
-        double b = sin ( theta );
-        double x0 = a * rho;
-        double y0 = b * rho;
+        float a = cos ( theta );
+        float b = sin ( theta );
+        float x0 = a * rho;
+        float y0 = b * rho;
         pt1.x = cvRound ( x0 + 1000 * ( -b ) );
         pt1.y = cvRound ( y0 + 1000 * ( a ) );
         pt2.x = cvRound ( x0 - 1000 * ( -b ) );
