@@ -21,8 +21,6 @@ static const int trackbarLimitHoughThresh = 100;
 
 static const int threshMaxVal = 255;
 
-bool checkNow = false;
-
 bool lab6_class::task_lines ( )
 {
     if ( !linesLoaded )
@@ -49,8 +47,6 @@ bool lab6_class::task_lines ( )
 
     Mat skelet;
     skeletezation ( frame, skelet );
-//    imshow ( windowLinesSkeleted, skelet );
-//    waitKey ( 1 );
 
     // TODO как правильно получать вектор в Input ( Output ) Array ???
     vector < Vec2f > lines;
@@ -89,9 +85,10 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
     thresh_img = skeleted_img.getMat_ ( );
 
     cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
-    int thresh = 70;
+//    int thresh = 70;
 //    threshold ( thresh_img, thresh_img, thresh, threshMaxVal, THRESH_BINARY );
     inRange ( srcImg, Scalar ( 84, 72, 61 ), Scalar ( 156, 147, 150 ), thresh_img );
+
 //    namedWindow ( "hsvImg", 1 );
 //    int h = 84;
 //    int s = 72;
@@ -117,10 +114,9 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 
     bool imgChanged = true;
     int i = 0;
-    // FIXME не работает условие выхода ( функция почему-то продолжает считаь, что все меняется )
-//    while ( imgChanged )
-    while ( i < 30 && imgChanged )
-//      while ( true )
+    const int iterationsStop = 100;
+    while ( imgChanged &&
+            ( i < iterationsStop ) )
     {
         skeletezation_iter ( thresh_img, thresh_img, 0 );
         imgChanged = skeletezation_iter ( thresh_img, thresh_img, 1 );
@@ -128,13 +124,10 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
         imshow ( windowLinesSkeleted, thresh_img );
         waitKey ( trackbarValueWaitTimeSkelet );
 
-        cout << "Iteration #" << i++ << endl;
-
-        if ( i > 30 )
-        {
-            checkNow = true;
-        }
+//        cout << "Iteration #" << i++ << endl;
+        i++;
     }
+    cout << "Skeletezation finished after " << i << " iterations." << endl;
 }
 
 bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray &skeleted_img, int iter )
@@ -146,7 +139,7 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
         return false;
     }
 
-    // создаём матрицу для OutputImage
+    // Создаём матрицу для OutputImage
     skeleted_img.create ( thresh_img.size ( ), thresh_img.type ( ) );
     Mat dst = skeleted_img.getMat ( );
 
@@ -162,46 +155,44 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
 
     Mat flagMap = Mat::zeros ( thresh_img.size ( ), CV_8U );
 
-    // FIXME понять, почему не прекращает искать ( imgChanged == true )
     bool imgChanged = false;
     for ( int y = 1 ; y < dst.rows - 1 ; y++ )
     {
         for ( int x = 1 ; x < dst.cols - 1 ; x++ )
         {
-            uchar neighbs [ 8 ] = { 0 };
-            neighbours ( dst, Point ( x, y ), neighbs );
-
-            int A = trans ( neighbs );
-
-            int B = 0;
-            for ( int i = 0 ; i < 8 ; i++ )
+            if ( dst.at < uchar > ( y, x ) != 0 )
             {
-                B += ( neighbs[ i ] != 0 ) ? 1 : 0;
-            }
+                uchar neighbs [ 8 ] = { 0 };
+                neighbours ( dst, Point ( x, y ), neighbs );
 
-            // step 1 -> P2 * P4 * P6
-            // step 2 -> P2 * P4 * P8
-            int m1 = ( iter == 0 ) ? ( neighbs[ 0 ] * neighbs[ 2 ] * neighbs[ 4 ] ) :
-                     ( neighbs[ 0 ] * neighbs[ 2 ] * neighbs[ 6 ] );
-            // step 1 -> P4 * P6 * P8
-            // step 2 -> P2 * P6 * P8
-            int m2 = ( iter == 0 ) ? ( neighbs[ 2 ] * neighbs[ 4 ] * neighbs[ 6 ] ) :
-                     ( neighbs[ 0 ] * neighbs[ 4 ] * neighbs[ 6 ] );
+                int A = trans ( neighbs );
 
-//            if ( ( A == 1 ) &&
-//                 ( B >= 2 * threshMaxVal && B <= 6 * threshMaxVal ) &&
-//                 ( m1 == 0 && m2 == 0 ) )
-            if ( ( A == 1 ) &&
-                 ( B >= 2 && B <= 6 ) &&
-                 ( m1 == 0 && m2 == 0 ) )
-            {
-                flagMap.at < uchar > ( y, x ) = threshMaxVal;
+                int B = 0;
+                for ( int i = 0 ; i < 8 ; i++ )
+                {
+                    B += ( neighbs[ i ] != 0 ) ? 1 : 0;
+                }
+
+                // step 1 -> P2 * P4 * P6
+                // step 2 -> P2 * P4 * P8
+                int m1 = ( iter == 0 ) ? ( neighbs[ 0 ] * neighbs[ 2 ] * neighbs[ 4 ] ) :
+                         ( neighbs[ 0 ] * neighbs[ 2 ] * neighbs[ 6 ] );
+                // step 1 -> P4 * P6 * P8
+                // step 2 -> P2 * P6 * P8
+                int m2 = ( iter == 0 ) ? ( neighbs[ 2 ] * neighbs[ 4 ] * neighbs[ 6 ] ) :
+                         ( neighbs[ 0 ] * neighbs[ 4 ] * neighbs[ 6 ] );
+
+                if ( ( A == 1 ) &&
+                     ( B >= 2 && B <= 6 ) &&
+                     ( m1 == 0 && m2 == 0 ) )
+                {
+                    flagMap.at < uchar > ( y, x ) = threshMaxVal;
+                }
             }
         }
     }
 
-//    dst = dst - flagMap;
-
+    // Тут происходит удаление пиксела
     for ( int y = 1 ; y < dst.rows - 1 ; y++ )
     {
         for ( int x = 1 ; x < dst.cols - 1 ; x++ )
@@ -212,11 +203,6 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
                 imgChanged = true;
             }
         }
-    }
-
-    if ( checkNow )
-    {
-        imshow ( "flagMap", flagMap );
     }
 
     return imgChanged;
@@ -268,7 +254,6 @@ int lab6_class::trans ( uchar *neighb )
 
 void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
 {
-    // Let Hough find all lines
     Mat img;
     img = skel_img.getMat_ ( );
     if ( img.empty ( ) || img.channels ( ) != 1 )
@@ -281,21 +266,38 @@ void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
     cout << lines.size ( ) << endl;
 }
 
-void lab6_class::merge_lines ( std::vector < cv::Vec2f > lines )
+void lab6_class::merge_lines ( std::vector < cv::Vec2f > &lines )
 {
     if ( !linesLoaded )
     {
         cout << "merge_lines () : Lines are not loaded !" << endl;
         return;
     }
-    // соединять, офкорс, только сопряженные линии и на выходе наверн иметь массив массивов
+
+    float eps_th = 0.05f;
+    int eps_rho = 10;
+    for ( uint i = 0 ; i < lines.size ( ) ; i++ )
+    {
+        for ( uint j = 0 ; j < lines.size ( ) ; j++ )
+        {
+            if ( i != j &&
+                 abs ( lines.at ( i )[ 0 ] - lines.at ( j )[ 0 ] ) <= eps_rho &&
+                 abs ( lines.at ( i )[ 1 ] - lines.at ( j )[ 1 ] ) <= eps_th )
+            {
+                lines.erase ( lines.begin ( ) + static_cast < int > ( j ) );
+            }
+        }
+    }
+    // TODO может получится придумать, как убирать лишнюю линию
+    // TODO может получитс придумать, как оставлять нужные размеры линий
 }
 
 void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines )
 {
     Mat image;
     image = img.getMat_ ( );
-    // Draw lines on image
+
+    // Рисуем линии
     float rho = 0;
     float theta = 0;
     for ( uint i = 0 ; i < lines.size ( ) ; i++ )
@@ -307,11 +309,14 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
         float b = sin ( theta );
         float x0 = a * rho;
         float y0 = b * rho;
+
+//        cout << rho << " " << theta << " " << i << endl;
+
         pt1.x = cvRound ( x0 + 1000 * ( -b ) );
         pt1.y = cvRound ( y0 + 1000 * ( a ) );
         pt2.x = cvRound ( x0 - 1000 * ( -b ) );
         pt2.y = cvRound ( y0 - 1000 * ( a ) );
-        line ( image, pt1, pt2, Scalar ( 0, 0, 255 ), 2, CV_AA );
+        line ( image, pt1, pt2, Scalar ( i, 0, 255 ), 2, CV_AA );
     }
 }
 

@@ -17,6 +17,8 @@ public:
 
     bool task_lines ( );
 
+    void setPathToTemps ( const std::string nickel, const std::string brass );
+
     /**
      * @brief - скелетезация всего видео ( ну ооооочень тормозунто )
      */
@@ -33,6 +35,9 @@ private:
     /**
      * block for coins finding
      */
+
+    std::string tempNickel;
+    std::string tempBrass;
 
     void find_coins ( std::vector < cv::Vec3f > coins );
 
@@ -75,7 +80,7 @@ private:
 
     void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec2f > &lines );
 
-    void merge_lines ( std::vector < cv::Vec2f > lines );
+    void merge_lines ( std::vector < cv::Vec2f > &lines );
 
     void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec2f > lines );
 

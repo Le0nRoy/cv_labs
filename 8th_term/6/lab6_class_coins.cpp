@@ -70,6 +70,12 @@ void lab6_class::coins_hist ( OutputArray histogram )
                false );
 }
 
+void lab6_class::setPathToTemps ( const string nickel, const string brass )
+{
+    tempNickel = nickel;
+    tempBrass = brass;
+}
+
 void lab6_class::classify_coins ( vector < Vec3f > circles )
 {
     if ( !coinsLoaded )
@@ -77,6 +83,10 @@ void lab6_class::classify_coins ( vector < Vec3f > circles )
         cout << "classify_coins () : Coins are not loaded !" << endl;
         return;
     }
+
+    Mat tempNickelImg = imread ( tempNickel, CV_LOAD_IMAGE_COLOR );
+    Mat tempBrassImg = imread ( tempBrass, CV_LOAD_IMAGE_COLOR );
+
     MatND hist;
     coins_hist ( hist );
     // use meanshift classificator here
@@ -86,7 +96,7 @@ void lab6_class::classify_coins ( vector < Vec3f > circles )
     for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
     {
         radius.at ( i ) = cvRound ( circles[ i ][ 2 ] );
-        meanRadius += radius.at ( i ) / circles.size ( );
+        meanRadius += radius.at ( i ) / static_cast < int > ( circles.size ( ) );
     }
 //    meanShift ( coinsImg, Rect ( meanRadius, meanRadius ),  )
     // draw

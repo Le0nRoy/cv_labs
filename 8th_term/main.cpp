@@ -5,8 +5,10 @@
 using namespace std;
 using namespace cv;
 
-const string lab6Coins = "../6/coinsImg.jpg";
-const string lab6Lines = "../6/line.avi";
+static const string lab6Coins = "../6/coinsImg.jpg";
+static const string lab6Lines = "../6/line.avi";
+static const string coinTempNickel = "../6/nickel.jpg";
+static const string coinTempBrass = "../6/bras.png";
 
 bool run_lab ( );
 
