@@ -32,6 +32,11 @@ bool lab6_class::task_coins ( )
 
 void lab6_class::find_coins ( vector < Vec3f > coins )
 {
+    if ( !coinsLoaded )
+    {
+        cout << "classify_coins () : Coins are not loaded !" << endl;
+        return;
+    }
     Mat grayCoins;
     // HoughCircles work only with 8U GrayScale image
     coinsImg.convertTo ( grayCoins, CV_8U );
@@ -70,10 +75,34 @@ void lab6_class::coins_hist ( OutputArray histogram )
                false );
 }
 
-void lab6_class::setPathToTemps ( const string nickel, const string brass )
+
+void lab6_class::draw_rounds ( InputOutputArray drawImage, vector < Vec3f > rounds, Scalar color , bool filled )
 {
-    tempNickel = nickel;
-    tempBrass = brass;
+    Mat drawImageMat = drawImage.getMat ( );
+    if ( drawImage.empty ( ) )
+    {
+        cout << "draw_rounds () : empty matrix given !" << endl;
+        return;
+    }
+    if ( rounds.size ( ) == 0 )
+    {
+        cout << "draw_rounds () : empty vector given !" << endl;
+        return;
+    }
+
+    int thickness = filled ? -1 : 1;
+    int lineType = filled ? FILLED : LINE_8;
+    for ( size_t i = 0 ; i < rounds.size ( ) ; i++ )
+    {
+        Point center ( cvRound ( rounds.at ( i )[ 0 ] ), cvRound ( rounds. at ( i )[ 1 ] ) );
+        // draw the circle center
+        circle ( drawImageMat, center, 3, color, -1, FILLED, 0 );
+        // draw the circle outline
+        int radius = cvRound ( rounds.at ( i )[ 2 ] );
+        circle ( drawImageMat, center, radius, color, thickness, lineType, 0 );
+    }
+    imshow ( "roundsMsk", drawImageMat );
+    waitKey ( );
 }
 
 void lab6_class::classify_coins ( vector < Vec3f > circles )
@@ -83,29 +112,42 @@ void lab6_class::classify_coins ( vector < Vec3f > circles )
         cout << "classify_coins () : Coins are not loaded !" << endl;
         return;
     }
+    else if (  !templatesLoaded )
+    {
+        cout << "classify_coins () : Templates are not loaded !" << endl;
+        return;
+    }
 
-    Mat tempNickelImg = imread ( tempNickel, CV_LOAD_IMAGE_COLOR );
-    Mat tempBrassImg = imread ( tempBrass, CV_LOAD_IMAGE_COLOR );
+    // TODO создать функцию поиска среднего hue
+    imshow ( "tempNick", templateNickel );
+    imshow ( "tempBrass", templateBrass );
+    waitKey();
 
-    MatND hist;
-    coins_hist ( hist );
+//    MatND hist;
+//    coins_hist ( hist );
     // use meanshift classificator here
     // for window size use median radius
-    vector < int > radius ( circles.size ( ) );
-    int meanRadius = 0;
-    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
-    {
-        radius.at ( i ) = cvRound ( circles[ i ][ 2 ] );
-        meanRadius += radius.at ( i ) / static_cast < int > ( circles.size ( ) );
-    }
+//    vector < int > radius ( circles.size ( ) );
+//    int meanRadius = 0;
+//    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
+//    {
+//        radius.at ( i ) = cvRound ( circles[ i ][ 2 ] );
+//        meanRadius += radius.at ( i ) / static_cast < int > ( circles.size ( ) );
+//    }
 //    meanShift ( coinsImg, Rect ( meanRadius, meanRadius ),  )
+
+    // TODO сюдой подсчёт среднего Hue у шаблонов
+
+    // TODO а сюдой подсчет среднего для каждой монеты ( центр и радиус брать ниже )
+
     // draw
-    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
-    {
-        Point center ( cvRound ( circles[ i ][ 0 ] ), cvRound ( circles[ i ][ 1 ] ) );
-        // draw the circle center
-        circle ( coinsImg, center, 3, Scalar ( 0, 0, 255 ), -1, 8, 0 );
-        // draw the circle outline
-//        circle ( coinsImg, center, radius.at ( i ), Scalar ( 0, 0, 0 ), 1, 8, 0 );
-    }
+    draw_rounds ( coinsImg, circles, Scalar ( 0, 0, 255 ), true );
+//    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
+//    {
+//        Point center ( cvRound ( circles[ i ][ 0 ] ), cvRound ( circles[ i ][ 1 ] ) );
+//        // draw the circle center
+//        circle ( coinsImg, center, 3, Scalar ( 0, 0, 255 ), -1, 8, 0 );
+//        // draw the circle outline
+////        circle ( coinsImg, center, radius.at ( i ), Scalar ( 0, 0, 0 ), 1, 8, 0 );
+//    }
 }

@@ -9,12 +9,38 @@
 using namespace cv;
 using namespace std;
 
-lab6_class::lab6_class ( const string wayToImgCoins, const string wayToImgLines )
+lab6_class::lab6_class ( )
+{
+}
+
+lab6_class::~lab6_class ( )
+{
+    // TODO мб стоит тут удалять все созданные окна
+    //  и вообще надо бы сделать вектор с именами окон, а не вот это все
+}
+
+bool lab6_class::loadLines (const std::string wayToImgLines)
+{
+    linesVideo.open ( wayToImgLines, CAP_ANY );
+    if ( !linesVideo.isOpened ( ) )
+    {
+        cout << "loadLines () : Lines failed to load !" << endl;
+        linesLoaded = false;
+    }
+    else
+    {
+        linesLoaded = true;
+    }
+
+    return linesLoaded;
+}
+
+bool lab6_class::loadCoins (const std::string wayToImgCoins)
 {
     coinsImg = imread ( wayToImgCoins, CV_LOAD_IMAGE_COLOR );
     if ( coinsImg.empty ( ) )
     {
-        cout << "lab6_class () : Coins failed to load !" << endl;
+        cout << "loadCoins () : Coins failed to load !" << endl;
         coinsLoaded = false;
     }
     else
@@ -22,20 +48,22 @@ lab6_class::lab6_class ( const string wayToImgCoins, const string wayToImgLines 
         coinsLoaded = true;
     }
 
-    linesVideo.open ( wayToImgLines, CAP_ANY );
-    if ( !linesVideo.isOpened ( ) )
+    return coinsLoaded;
+}
+
+bool lab6_class::loadTemplates ( const string wayToNickel, const string wayToBrass )
+{
+    templateNickel = imread ( wayToNickel, CV_LOAD_IMAGE_COLOR );
+    templateBrass = imread ( wayToBrass, CV_LOAD_IMAGE_COLOR );
+    if ( templateNickel.empty ( ) || templateBrass.empty ( ) )
     {
-        cout << "lab6_class () : Lines failed to load !" << endl;
-        linesLoaded = false;
+        cout << "loadTemplates () : Templates failed to load !" << endl;
+        templatesLoaded = false;
     }
     else
     {
-        linesLoaded = true;
+        templatesLoaded = true;
     }
-}
 
-lab6_class::~lab6_class ( )
-{
-    // TODO мб стоит тут удалять все созданные окна
-    //  и вообще надо бы сделать вектор с именами окон, а не вот это все
+    return templatesLoaded;
 }

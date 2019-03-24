@@ -45,24 +45,28 @@ bool lab6_class::task_lines ( )
     imshow ( windowLinesOriginal, frame );
     waitKey ( 0 );
 
-    Mat skelet;
-    skeletezation ( frame, skelet );
-
-    // TODO как правильно получать вектор в Input ( Output ) Array ???
-    vector < Vec2f > lines;
-    find_lines ( skelet, lines );
-    if ( lines.empty ( ) )
+    while ( !frame.empty ( ) )
     {
-        cout << "No lines found" << endl;
-        destroy_windows_lines ( );
-        return false;
+        Mat skelet;
+        skeletezation ( frame, skelet );
 
+        // TODO как правильно получать вектор в Input ( Output ) Array ???
+        vector < Vec2f > lines;
+        find_lines ( skelet, lines );
+        if ( lines.empty ( ) )
+        {
+            cout << "No lines found" << endl;
+            destroy_windows_lines ( );
+            return false;
+
+        }
+
+        merge_lines ( skelet, frame, lines );
+
+        imshow ( windowLinesOriginal, frame );
+        waitKey ( 5 );
+        linesVideo.read ( frame );
     }
-
-    merge_lines ( lines );
-
-    draw_lines ( frame, lines );
-    imshow ( windowLinesOriginal, frame );
 
     waitKey ( 0 );
 
@@ -110,7 +114,7 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 //    destroyWindow ( "hsvImg" );
 
     imshow ( windowLinesThreshed, thresh_img );
-    waitKey ( 1 );
+//    waitKey ( 1 );
 
     bool imgChanged = true;
     int i = 0;
@@ -122,11 +126,12 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
         imgChanged = skeletezation_iter ( thresh_img, thresh_img, 1 );
 
         imshow ( windowLinesSkeleted, thresh_img );
-        waitKey ( trackbarValueWaitTimeSkelet );
+//        waitKey ( trackbarValueWaitTimeSkelet );
 
 //        cout << "Iteration #" << i++ << endl;
         i++;
     }
+    waitKey ( 1 );
     cout << "Skeletezation finished after " << i << " iterations." << endl;
 }
 
@@ -208,7 +213,7 @@ bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray
     return imgChanged;
 }
 
-void lab6_class::neighbours ( const _InputArray &img, Point pix, uchar *neighbs )
+void lab6_class::neighbours ( InputArray img, Point pix, uchar *neighbs )
 {
     Mat image = img.getMat ( );
     if ( image.empty ( ) )
@@ -263,16 +268,23 @@ void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
     }
 
     HoughLines ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
-    cout << lines.size ( ) << endl;
 }
 
-void lab6_class::merge_lines ( std::vector < cv::Vec2f > &lines )
+void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, std::vector < cv::Vec2f > &lines )
 {
     if ( !linesLoaded )
     {
         cout << "merge_lines () : Lines are not loaded !" << endl;
         return;
     }
+    Mat skeletedImage;
+    skeletedImage = skel_img.getMat_ ( );
+
+    Mat imageWithLines;
+    imageWithLines = drawImage.getMat_ ( );
+
+    assert ( !skeletedImage.empty ( ) );
+    assert ( !imageWithLines.empty ( ) );
 
     float eps_th = 0.05f;
     int eps_rho = 10;
@@ -284,15 +296,46 @@ void lab6_class::merge_lines ( std::vector < cv::Vec2f > &lines )
                  abs ( lines.at ( i )[ 0 ] - lines.at ( j )[ 0 ] ) <= eps_rho &&
                  abs ( lines.at ( i )[ 1 ] - lines.at ( j )[ 1 ] ) <= eps_th )
             {
+                // FIXME во время видео скорее всего здесь OutOfRange
                 lines.erase ( lines.begin ( ) + static_cast < int > ( j ) );
             }
         }
     }
-    // TODO может получится придумать, как убирать лишнюю линию
-    // TODO может получитс придумать, как оставлять нужные размеры линий
+
+    Mat linesMask ( imageWithLines.size ( ), CV_8UC1, Scalar ( 0, 0, 0 ) );
+    linesMask.zeros ( skeletedImage.size ( ), CV_8UC1 );
+    draw_lines ( linesMask, lines, false );
+    for ( int y = linesMask.rows - 1 ; y != 0; y-- )
+    {
+        for ( int x = linesMask.cols - 1 ; x != 0; x--)
+        {
+            if ( skeletedImage.at < uchar > ( y, x ) != linesMask.at < uchar > ( y, x ) )
+            {
+                linesMask.at < uchar > ( y, x ) = 0;
+            }
+        }
+    }
+
+    // TODO можно найти крайние точки линий, чтобы по ним через line () строить
+    // TODO можно попробовать посоединять линии
+    // TODO можно попробовать удалить лишние артефакты ( хотя попробуй отличи их )
+    for ( int y = imageWithLines.rows - 1 ; y != 0; y-- )
+    {
+        for ( int x = imageWithLines.cols - 1 ; x != 0; x--)
+        {
+            if ( linesMask.at < uchar > ( y, x ) )
+            {
+                imageWithLines.at < Vec3b > ( y, x ) = Vec3b ( 0, 0, 255 );
+            }
+        }
+    }
+
+//    imshow ( "lines_raw", linesMask );
+//    waitKey ( 0 );
+//    destroyWindow ( "lines_raw" );
 }
 
-void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines )
+void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines, bool threeColors )
 {
     Mat image;
     image = img.getMat_ ( );
@@ -300,6 +343,22 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
     // Рисуем линии
     float rho = 0;
     float theta = 0;
+    Scalar color;
+    if ( threeColors )
+    {
+        color [ 0 ] = 0;
+        color [ 1 ] = 0;
+        color [ 2 ] = 255;
+        color [ 3 ] = 0;
+    }
+    else
+    {
+        color [ 0 ] = 255;
+        color [ 1 ] = 0;
+        color [ 2 ] = 0;
+        color [ 3 ] = 0;
+    }
+
     for ( uint i = 0 ; i < lines.size ( ) ; i++ )
     {
         rho = lines.at ( i )[ 0 ];
@@ -310,13 +369,17 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
         float x0 = a * rho;
         float y0 = b * rho;
 
-//        cout << rho << " " << theta << " " << i << endl;
-
         pt1.x = cvRound ( x0 + 1000 * ( -b ) );
         pt1.y = cvRound ( y0 + 1000 * ( a ) );
         pt2.x = cvRound ( x0 - 1000 * ( -b ) );
         pt2.y = cvRound ( y0 - 1000 * ( a ) );
-        line ( image, pt1, pt2, Scalar ( i, 0, 255 ), 2, CV_AA );
+
+        if ( threeColors )
+        {
+            color [ 0 ] = i;
+        }
+
+        line ( image, pt1, pt2, color, 2, CV_AA );
     }
 }
 

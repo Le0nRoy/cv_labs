@@ -8,7 +8,7 @@ using namespace cv;
 static const string lab6Coins = "../6/coinsImg.jpg";
 static const string lab6Lines = "../6/line.avi";
 static const string coinTempNickel = "../6/nickel.jpg";
-static const string coinTempBrass = "../6/bras.png";
+static const string coinTempBrass = "../6/brass.png";
 
 bool run_lab ( );
 
@@ -27,7 +27,12 @@ bool run_lab ( )
     bool exit_code = false;
     // here wrapping for lab num
     int taskNum = 1;
-    lab6_class lab6 ( lab6Coins, lab6Lines );
+    lab6_class lab6;
+    //lab6Coins, lab6Lines
+    lab6.loadLines ( lab6Lines );
+    lab6.loadCoins ( lab6Coins );
+    lab6.loadTemplates ( coinTempNickel, coinTempBrass );
+
     while ( taskNum )
     {
         cout << endl

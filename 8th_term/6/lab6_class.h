@@ -9,7 +9,7 @@
 class lab6_class
 {
 public:
-    lab6_class ( const std::string wayToImgCoins, const std::string wayToImgLines );
+    lab6_class ( );
 
     ~lab6_class ( );
 
@@ -17,7 +17,11 @@ public:
 
     bool task_lines ( );
 
-    void setPathToTemps ( const std::string nickel, const std::string brass );
+    bool loadLines ( const std::string wayToImgLines );
+
+    bool loadCoins ( const std::string wayToImgCoins );
+
+    bool loadTemplates ( const std::string wayToNickel, const std::string wayToBrass );
 
     /**
      * @brief - скелетезация всего видео ( ну ооооочень тормозунто )
@@ -25,23 +29,21 @@ public:
     bool task_lines_video ( );
 
 private:
-    cv::Mat coinsImg;
-    cv::VideoCapture linesVideo;
-
-    bool coinsLoaded;
-    bool linesLoaded;
-
-private:
     /**
      * block for coins finding
      */
+    cv::Mat coinsImg;
+    cv::Mat templateNickel;
+    cv::Mat templateBrass;
 
-    std::string tempNickel;
-    std::string tempBrass;
+    bool coinsLoaded;
+    bool templatesLoaded;
 
     void find_coins ( std::vector < cv::Vec3f > coins );
 
     void coins_hist ( cv::OutputArray histogram );
+
+    void draw_rounds ( cv::InputOutputArray drawImage, std::vector < cv::Vec3f > rounds, cv::Scalar color , bool filled );
 
     void classify_coins ( std::vector < cv::Vec3f > circles );
 
@@ -49,6 +51,9 @@ private:
     /**
      * block for lines finding
      */
+    cv::VideoCapture linesVideo;
+
+    bool linesLoaded;
 
     /**
      * @brief - скелетезация нынешнего кадра
@@ -68,7 +73,7 @@ private:
      * @param pix
      * @return - массив соседей пиксела в правильном порядке ( P2, P3 .. P9 )
      */
-    void neighbours ( const cv::_InputArray &img, cv::Point pix, uchar *neighbs );
+    void neighbours ( cv::InputArray img, cv::Point pix, uchar *neighbs );
 
     /**
      * @brief - подсчет переходов от чёрного к белому "0->1"
@@ -80,9 +85,9 @@ private:
 
     void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec2f > &lines );
 
-    void merge_lines ( std::vector < cv::Vec2f > &lines );
+    void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec2f > &lines );
 
-    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec2f > lines );
+    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec2f > lines, bool threeColors );
 
     void make_windows_lines ( );
 
