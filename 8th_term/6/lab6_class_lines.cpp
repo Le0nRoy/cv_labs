@@ -39,13 +39,15 @@ bool lab6_class::task_lines ( )
 
     make_windows_lines ( );
 
+    int exitCondition = 1;
     createTrackbar ( "Time_skelet", windowLinesSkeleted, &trackbarValueWaitTimeSkelet, trackbarLimitWaitTimeSkelet );
     createTrackbar ( "Hough_thresh", windowLinesOriginal, &trackbarValueHoughThresh, trackbarLimitHoughThresh );
+    createTrackbar ( "turn_off", windowLinesOriginal, &exitCondition, 1 );
 
     imshow ( windowLinesOriginal, frame );
     waitKey ( 0 );
 
-    while ( !frame.empty ( ) )
+    while ( !frame.empty ( ) && ( exitCondition != 0 ) )
     {
         Mat skelet;
         skeletezation ( frame, skelet );
@@ -64,7 +66,7 @@ bool lab6_class::task_lines ( )
         merge_lines ( skelet, frame, lines );
 
         imshow ( windowLinesOriginal, frame );
-        waitKey ( 5 );
+        waitKey ( 1 );
         linesVideo.read ( frame );
     }
 
@@ -89,8 +91,6 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
     thresh_img = skeleted_img.getMat_ ( );
 
     cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
-//    int thresh = 70;
-//    threshold ( thresh_img, thresh_img, thresh, threshMaxVal, THRESH_BINARY );
     inRange ( srcImg, Scalar ( 84, 72, 61 ), Scalar ( 156, 147, 150 ), thresh_img );
 
 //    namedWindow ( "hsvImg", 1 );
@@ -114,7 +114,6 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 //    destroyWindow ( "hsvImg" );
 
     imshow ( windowLinesThreshed, thresh_img );
-//    waitKey ( 1 );
 
     bool imgChanged = true;
     int i = 0;
@@ -127,11 +126,8 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 
         imshow ( windowLinesSkeleted, thresh_img );
 //        waitKey ( trackbarValueWaitTimeSkelet );
-
-//        cout << "Iteration #" << i++ << endl;
         i++;
     }
-    waitKey ( 1 );
     cout << "Skeletezation finished after " << i << " iterations." << endl;
 }
 
@@ -286,53 +282,57 @@ void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, 
     assert ( !skeletedImage.empty ( ) );
     assert ( !imageWithLines.empty ( ) );
 
-    float eps_th = 0.05f;
-    int eps_rho = 10;
-    for ( uint i = 0 ; i < lines.size ( ) ; i++ )
+    try
     {
-        for ( uint j = 0 ; j < lines.size ( ) ; j++ )
+        float eps_th = 0.05f;
+        int eps_rho = 10;
+        for ( uint i = 0 ; i < lines.size ( ) ; i++ )
         {
-            if ( i != j &&
-                 abs ( lines.at ( i )[ 0 ] - lines.at ( j )[ 0 ] ) <= eps_rho &&
-                 abs ( lines.at ( i )[ 1 ] - lines.at ( j )[ 1 ] ) <= eps_th )
+            for ( uint j = 0 ; j < lines.size ( ) ; j++ )
             {
-                // FIXME во время видео скорее всего здесь OutOfRange
-                lines.erase ( lines.begin ( ) + static_cast < int > ( j ) );
+                if ( i != j &&
+                     abs ( lines.at ( i )[ 0 ] - lines.at ( j )[ 0 ] ) <= eps_rho &&
+                     abs ( lines.at ( i )[ 1 ] - lines.at ( j )[ 1 ] ) <= eps_th )
+                {
+                    // FIXME во время видео скорее всего здесь OutOfRange
+                    lines.erase ( lines.begin ( ) + static_cast < int > ( i ) );
+                }
+            }
+        }
+
+        Mat linesMask ( imageWithLines.size ( ), CV_8UC1, Scalar ( 0, 0, 0 ) );
+        linesMask.zeros ( skeletedImage.size ( ), CV_8UC1 );
+        draw_lines ( linesMask, lines, false );
+        for ( int y = linesMask.rows - 1 ; y != 0; y-- )
+        {
+            for ( int x = linesMask.cols - 1 ; x != 0; x--)
+            {
+                if ( skeletedImage.at < uchar > ( y, x ) != linesMask.at < uchar > ( y, x ) )
+                {
+                    linesMask.at < uchar > ( y, x ) = 0;
+                }
+            }
+        }
+
+        // TODO можно найти крайние точки линий, чтобы по ним через line () строить
+        // TODO можно попробовать посоединять линии
+        // TODO можно попробовать удалить лишние артефакты ( хотя попробуй отличи их )
+        for ( int y = imageWithLines.rows - 1 ; y != 0; y-- )
+        {
+            for ( int x = imageWithLines.cols - 1 ; x != 0; x--)
+            {
+                if ( linesMask.at < uchar > ( y, x ) )
+                {
+                    imageWithLines.at < Vec3b > ( y, x ) = Vec3b ( 0, 0, 255 );
+                }
             }
         }
     }
-
-    Mat linesMask ( imageWithLines.size ( ), CV_8UC1, Scalar ( 0, 0, 0 ) );
-    linesMask.zeros ( skeletedImage.size ( ), CV_8UC1 );
-    draw_lines ( linesMask, lines, false );
-    for ( int y = linesMask.rows - 1 ; y != 0; y-- )
+    catch ( exception &e )
     {
-        for ( int x = linesMask.cols - 1 ; x != 0; x--)
-        {
-            if ( skeletedImage.at < uchar > ( y, x ) != linesMask.at < uchar > ( y, x ) )
-            {
-                linesMask.at < uchar > ( y, x ) = 0;
-            }
-        }
+        cout << endl << "MY EXCEPTION"
+             << endl << e.what ( ) << endl;
     }
-
-    // TODO можно найти крайние точки линий, чтобы по ним через line () строить
-    // TODO можно попробовать посоединять линии
-    // TODO можно попробовать удалить лишние артефакты ( хотя попробуй отличи их )
-    for ( int y = imageWithLines.rows - 1 ; y != 0; y-- )
-    {
-        for ( int x = imageWithLines.cols - 1 ; x != 0; x--)
-        {
-            if ( linesMask.at < uchar > ( y, x ) )
-            {
-                imageWithLines.at < Vec3b > ( y, x ) = Vec3b ( 0, 0, 255 );
-            }
-        }
-    }
-
-//    imshow ( "lines_raw", linesMask );
-//    waitKey ( 0 );
-//    destroyWindow ( "lines_raw" );
 }
 
 void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines, bool threeColors )
@@ -346,17 +346,11 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
     Scalar color;
     if ( threeColors )
     {
-        color [ 0 ] = 0;
-        color [ 1 ] = 0;
-        color [ 2 ] = 255;
-        color [ 3 ] = 0;
+        color = Scalar ( 0, 0, 255 );
     }
     else
     {
-        color [ 0 ] = 255;
-        color [ 1 ] = 0;
-        color [ 2 ] = 0;
-        color [ 3 ] = 0;
+        color = Scalar ( 255, 0, 0 );
     }
 
     for ( uint i = 0 ; i < lines.size ( ) ; i++ )

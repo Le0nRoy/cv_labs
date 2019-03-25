@@ -30,7 +30,7 @@ bool lab6_class::task_coins ( )
     return true;
 }
 
-void lab6_class::find_coins ( vector < Vec3f > coins )
+void lab6_class::find_coins ( vector < Vec3f > &coins )
 {
     if ( !coinsLoaded )
     {
@@ -48,33 +48,35 @@ void lab6_class::find_coins ( vector < Vec3f > coins )
                    2, grayCoins.rows / 4, 200, 100 );
 }
 
-void lab6_class::coins_hist ( OutputArray histogram )
+float lab6_class::average_saturation ( InputArray src )
 {
-    Mat hsv;
-    cvtColor ( coinsImg, hsv, COLOR_BGR2HSV );
-    // Quantize the hue to 30 levels
-    // and the saturation to 32 levels
-    int hbins = 30;
-    int sbins = 32;
-    int histSize[] = { hbins, sbins };
-    // hue varies from 0 to 179, see cvtColor
-    float hranges[] = { 0, 180 };
-    // saturation varies from 0 (black-gray-white) to
-    // 255 (pure spectrum color)
-    float sranges[] = { 0, 256 };
-    const float *ranges[] = { hranges, sranges };
+    Mat img = src.getMat ( );
+    if ( img.empty ( ) )
+    {
+        cout << "average_hue ( ) : empty mat given !" << endl;
+        return 0;
+    }
+    Mat imgHSV;
+    Mat imgMask;
+    float res = 0;
+    cvtColor ( img, imgHSV, CV_BGR2HSV );
+    cvtColor ( img, imgMask, CV_BGR2GRAY );
+    threshold ( imgMask, imgMask, 20, 255, THRESH_BINARY );
 
-    MatND hist;
-    histogram.create ( hist.size ( ), hist.type ( ) );
-    hist = histogram.getMat_ ( );
-    // we compute the histogram from the 0-th and 1-st channels
-    int channels[] = { 0, 1 };
-    calcHist ( &hsv, 1, channels, Mat ( ), // do not use mask
-               hist, 2, histSize, ranges,
-               true, // the histogram is uniform
-               false );
+    for ( int y = 10; y < imgHSV.rows - 10; y++ )
+    {
+        for ( int x = 10; x < imgHSV.cols - 10; x++ )
+        {
+            if ( imgMask.at < uchar > ( y, x ) != 0 )
+            {
+                res += imgHSV.at < Vec3b > ( y, x ) [ 1 ];
+            }
+        }
+    }
+    res /= imgHSV.rows;
+    res /= imgHSV.cols;
+    return res;
 }
-
 
 void lab6_class::draw_rounds ( InputOutputArray drawImage, vector < Vec3f > rounds, Scalar color , bool filled )
 {
@@ -90,7 +92,7 @@ void lab6_class::draw_rounds ( InputOutputArray drawImage, vector < Vec3f > roun
         return;
     }
 
-    int thickness = filled ? -1 : 1;
+    int thickness = filled ? -1 : 3;
     int lineType = filled ? FILLED : LINE_8;
     for ( size_t i = 0 ; i < rounds.size ( ) ; i++ )
     {
@@ -101,8 +103,6 @@ void lab6_class::draw_rounds ( InputOutputArray drawImage, vector < Vec3f > roun
         int radius = cvRound ( rounds.at ( i )[ 2 ] );
         circle ( drawImageMat, center, radius, color, thickness, lineType, 0 );
     }
-    imshow ( "roundsMsk", drawImageMat );
-    waitKey ( );
 }
 
 void lab6_class::classify_coins ( vector < Vec3f > circles )
@@ -118,36 +118,57 @@ void lab6_class::classify_coins ( vector < Vec3f > circles )
         return;
     }
 
-    // TODO создать функцию поиска среднего hue
-    imshow ( "tempNick", templateNickel );
-    imshow ( "tempBrass", templateBrass );
-    waitKey();
+    float nickelSaturation = average_saturation ( templateNickel ); // 17.8
+    float brassSaturation = average_saturation ( templateBrass ); // 72.4
+    // по-хорошему я должен бы тут еще две переменные ввести ( мин и макс порог )
+    // и через сравнение верхних переменных присвоить, но я ленивая жоппка
 
-//    MatND hist;
-//    coins_hist ( hist );
-    // use meanshift classificator here
-    // for window size use median radius
-//    vector < int > radius ( circles.size ( ) );
-//    int meanRadius = 0;
-//    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
-//    {
-//        radius.at ( i ) = cvRound ( circles[ i ][ 2 ] );
-//        meanRadius += radius.at ( i ) / static_cast < int > ( circles.size ( ) );
-//    }
-//    meanShift ( coinsImg, Rect ( meanRadius, meanRadius ),  )
+    try
+    {
+        for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
+        {
+            Point center ( cvRound ( circles[ i ][ 0 ] ), cvRound ( circles[ i ][ 1 ] ) );
+            int radius = cvRound ( circles.at ( i )[ 2 ] );
 
-    // TODO сюдой подсчёт среднего Hue у шаблонов
+            Point roiLeftUp ( center.x - radius, center.y - radius );
+            Point roiRightDown ( center.x + radius, center.y + radius );
+            Rect roiRect ( roiLeftUp, roiRightDown );
 
-    // TODO а сюдой подсчет среднего для каждой монеты ( центр и радиус брать ниже )
+            Mat ROI;
+            ROI = coinsImg ( roiRect );
 
-    // draw
-    draw_rounds ( coinsImg, circles, Scalar ( 0, 0, 255 ), true );
-//    for ( size_t i = 0 ; i < circles.size ( ) ; i++ )
-//    {
-//        Point center ( cvRound ( circles[ i ][ 0 ] ), cvRound ( circles[ i ][ 1 ] ) );
-//        // draw the circle center
-//        circle ( coinsImg, center, 3, Scalar ( 0, 0, 255 ), -1, 8, 0 );
-//        // draw the circle outline
-////        circle ( coinsImg, center, radius.at ( i ), Scalar ( 0, 0, 0 ), 1, 8, 0 );
-//    }
+            Scalar color ( 0, 0, 0 );
+            Scalar colorBrass ( 0, 0, 255 );
+            Scalar colorNickel ( 0, 255, 0 );
+
+            float curSaturation = average_saturation ( ROI );
+            if ( curSaturation < brassSaturation )
+            {
+                color = colorBrass;
+            }
+            else if ( curSaturation > nickelSaturation )
+            {
+                color = colorNickel;
+            }
+            else if ( abs ( brassSaturation - curSaturation ) < abs ( curSaturation - nickelSaturation ) )
+            {
+                color = colorBrass;
+            }
+            else
+            {
+                color = colorNickel;
+            }
+
+            vector < Vec3f > drawnCircle ( 1 );
+            drawnCircle.at ( 0 ) = circles.at ( i );
+            // draw clusters
+            draw_rounds ( coinsImg, drawnCircle, color, false );
+
+        }
+    }
+    catch ( exception &e )
+    {
+        cout << endl << "MY EXCEPTION"
+             << endl << e.what ( ) << endl;
+    }
 }

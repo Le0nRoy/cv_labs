@@ -39,9 +39,9 @@ private:
     bool coinsLoaded;
     bool templatesLoaded;
 
-    void find_coins ( std::vector < cv::Vec3f > coins );
+    void find_coins ( std::vector < cv::Vec3f > &coins );
 
-    void coins_hist ( cv::OutputArray histogram );
+    float average_saturation ( cv::InputArray src );
 
     void draw_rounds ( cv::InputOutputArray drawImage, std::vector < cv::Vec3f > rounds, cv::Scalar color , bool filled );
 

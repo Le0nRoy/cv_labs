@@ -5,7 +5,7 @@
 class lab_aruco
 {
 public:
-    lab_aruco();
+    lab_aruco ( );
 };
 
 #endif // LAB_ARUCO_H
