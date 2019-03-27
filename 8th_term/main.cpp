@@ -10,6 +10,8 @@ using namespace cv;
 /**
  * lab5 variables block
  */
+static const string lab5VideoLight = "../5/0.avi";
+static const string lab5VideoDark = "../5/calib_1.avi";
 
 /**
  * lab6 variables block
@@ -22,6 +24,7 @@ static const string lab6CoinTempBrass = "../6/brass.png";
 /**
  * Aruco variables block
  */
+static const int labArucoVideoNum = 0;
 
 bool run_lab5 ( );
 bool run_lab6 ( );
@@ -74,11 +77,13 @@ int main ( )
             }
         }
     }
+    destroyAllWindows ( );
     return 0;
 }
 
 bool run_lab5 ( )
 {
+    destroyAllWindows ( );
     return true;
 }
 
@@ -144,5 +149,9 @@ bool run_lab6 ( )
 
 bool run_lab_aruco ( )
 {
-    return true;
+    lab_aruco labAruco;
+    labAruco.loadVideo ( labArucoVideoNum );
+    labAruco.run_lab ( );
+    destroyAllWindows ( );
+    return false;
 }

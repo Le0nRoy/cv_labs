@@ -9,7 +9,8 @@ LIBS += -L$$(OPENCV)/bin \
         -lopencv_imgcodecs331 \
         -lopencv_highgui331 \
         -lopencv_imgproc331 \
-        -lopencv_videoio331
+        -lopencv_videoio331 \
+        -lopencv_aruco331
 
 SOURCES += \
         main.cpp \
