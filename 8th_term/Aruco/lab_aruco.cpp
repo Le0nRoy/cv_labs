@@ -41,26 +41,26 @@ void lab_aruco::run_lab ( )
         std::cout << "run_lab ( ) : no videoCapture opened !" << std::endl;
     }
     cv::Mat frame;
-    capture.read ( frame );
+//    capture.read ( frame );
 
     cv::namedWindow ( windowCapture, cv::WINDOW_AUTOSIZE );
 
-    save_marker ( );
+//    save_marker ( );
 
     bool exitCondition = true;
     while ( !frame.empty ( ) && exitCondition )
     {
-        capture.read ( frame );
-
+        frame = cv::imread ( "../Aruco/" );
         cv::Mat detectedMarkers;
         find_markers ( frame, detectedMarkers );
 
         cv::imshow ( windowCapture, frame );
         cv::imshow ( windowMarker, detectedMarkers );
-        if ( cv::waitKey ( 5 ) == 27 )
+        if ( cv::waitKey ( 0 ) == 27 )
         {
             exitCondition = false;
         }
+        capture.read ( frame );
     }
     cv::destroyWindow ( windowCapture );
 }
@@ -77,7 +77,9 @@ void lab_aruco::find_markers ( cv::InputArray src, cv::OutputArray outImg )
         }
 
         outImg.create ( inputImage.size ( ), inputImage.type ( ) );
-        cv::Mat outputImage = outImg.getMat ( );
+        cv::Mat outputImage;
+        outputImage = outImg.getMat ( );
+        inputImage.convertTo ( outputImage, -1 );
 
         std::vector < int > markerIds;
         std::vector < std::vector < cv::Point2f > > markerCorners;
@@ -85,9 +87,9 @@ void lab_aruco::find_markers ( cv::InputArray src, cv::OutputArray outImg )
 
         cv::Ptr < cv::aruco::Dictionary > dict = cv::aruco::getPredefinedDictionary ( cv::aruco::DICT_6X6_250 );
 
-        cv::Ptr < cv::aruco::DetectorParameters > parameters;
+        cv::Ptr < cv::aruco::DetectorParameters > parameters = cv::aruco::DetectorParameters::create();
 
-        cv::aruco::detectMarkers ( inputImage, dict, markerCorners, markerIds/*, parameters, rejectedCandidates*/ );
+        cv::aruco::detectMarkers ( inputImage, dict, markerCorners, markerIds, parameters, rejectedCandidates );
 
         cv::aruco::drawDetectedMarkers ( outputImage, markerCorners, markerIds );
     }
