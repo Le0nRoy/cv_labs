@@ -62,6 +62,12 @@ private:
     void skeletezation ( const cv::_InputArray &src, const cv::_OutputArray &skeleted_img );
 
     /**
+     * @brief - убирает все пиксели выше середины
+     * @param image
+     */
+    void clear_above_horizont ( cv::InputOutputArray image );
+
+    /**
      * @brief - полная итерация скелитизации по алгоритму Шанг-Суня
      * @param iter - номер шага
      */
@@ -83,7 +89,7 @@ private:
      */
     int trans ( uchar *neighb );
 
-    void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec2f > &lines );
+    void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec4i > &lines );
 
     void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec2f > &lines );
 

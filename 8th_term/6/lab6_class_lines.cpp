@@ -61,7 +61,6 @@ bool lab6_class::task_lines ( )
         skeletezation ( frame, skelet );
         imshow ( windowLinesSkeleted, skelet );
 
-        // TODO как правильно получать вектор в Input ( Output ) Array ???
         vector < Vec2f > lines;
         find_lines ( skelet, lines );
         if ( lines.empty ( ) )
@@ -101,6 +100,7 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 
     cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
     inRange ( srcImg, Scalar ( 84, 72, 61 ), Scalar ( 156, 147, 150 ), thresh_img );
+    clear_above_horizont ( thresh_img );
 
 //    namedWindow ( "hsvImg", 1 );
 //    int h = 84;
@@ -138,6 +138,24 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
         i++;
     }
     cout << "Skeletezation finished after " << i << " iterations." << endl;
+}
+
+void lab6_class::clear_above_horizont ( cv::InputOutputArray image )
+{
+    Mat img = image.getMat ( );
+    if ( img.empty ( ) )
+    {
+        cout << " clear_above_horizont ( ) : empty matrix ! " << endl;
+        return;
+    }
+
+    for ( int y = 0; y < img.rows / 2; y++)
+    {
+        for ( int x = 0; x < img.cols; x++ )
+        {
+            img.at < uchar > ( y, x ) = 0;
+        }
+    }
 }
 
 bool lab6_class::skeletezation_iter ( const _InputArray &img, const _OutputArray &skeleted_img, int iter )
@@ -262,7 +280,7 @@ int lab6_class::trans ( uchar *neighb )
     return res;
 }
 
-void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
+void lab6_class::find_lines ( InputArray skel_img, vector < Vec4i > &lines )
 {
     Mat img;
     img = skel_img.getMat_ ( );
@@ -272,7 +290,7 @@ void lab6_class::find_lines ( InputArray skel_img, vector < Vec2f > &lines )
         return;
     }
 
-    HoughLines ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
+    HoughLinesP ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
 }
 
 void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, std::vector < cv::Vec2f > &lines )
