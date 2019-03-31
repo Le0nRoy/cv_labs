@@ -21,6 +21,14 @@ static const int trackbarLimitHoughThresh = 100;
 
 static const int threshMaxVal = 255;
 
+/**
+ * @note найти HoughLines, который выдает две точки на отрезок
+ *      убрать все ,что вышел линии горизонта ( середина изображения? )
+ *      при помощи открытия убрать все ,кроме близжайшей линии
+ *      должна остаться только эта линия и выбрать произвольную точку на ней
+ *      на исходном ( отфильтроаном ) изображении на выбранную точку применить заливку
+ */
+
 bool lab6_class::task_lines ( )
 {
     if ( !linesLoaded )
@@ -51,6 +59,7 @@ bool lab6_class::task_lines ( )
     {
         Mat skelet;
         skeletezation ( frame, skelet );
+        imshow ( windowLinesSkeleted, skelet );
 
         // TODO как правильно получать вектор в Input ( Output ) Array ???
         vector < Vec2f > lines;
@@ -113,7 +122,7 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
 //    }
 //    destroyWindow ( "hsvImg" );
 
-    imshow ( windowLinesThreshed, thresh_img );
+//    imshow ( windowLinesThreshed, thresh_img );
 
     bool imgChanged = true;
     int i = 0;
@@ -124,7 +133,7 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
         skeletezation_iter ( thresh_img, thresh_img, 0 );
         imgChanged = skeletezation_iter ( thresh_img, thresh_img, 1 );
 
-        imshow ( windowLinesSkeleted, thresh_img );
+//        imshow ( windowLinesSkeleted, thresh_img );
 //        waitKey ( trackbarValueWaitTimeSkelet );
         i++;
     }
