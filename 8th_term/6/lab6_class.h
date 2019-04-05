@@ -91,9 +91,11 @@ private:
 
     void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec4i > &lines );
 
-    void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec2f > &lines );
+    void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec4i > &lines );
 
-    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec2f > lines, bool threeColors );
+    cv::Point countCrossPoint ( cv::Vec4i line1, cv::Vec4i line2 );
+
+    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec4i > lines, bool threeColors );
 
     void make_windows_lines ( );
 

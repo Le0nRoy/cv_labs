@@ -5,6 +5,7 @@
 #include <opencv2/imgproc.hpp>
 #include "opencv2/video/tracking.hpp"
 #include <iostream>
+#include <math.h>
 
 using namespace cv;
 using namespace std;
@@ -16,7 +17,7 @@ static string windowLinesSkeleted = "lines_skeleted";
 static int trackbarValueWaitTimeSkelet = 10;
 static const int trackbarLimitWaitTimeSkelet = 1000;
 
-static int trackbarValueHoughThresh = 55;
+static int trackbarValueHoughThresh = 35;
 static const int trackbarLimitHoughThresh = 100;
 
 static const int threshMaxVal = 255;
@@ -61,7 +62,7 @@ bool lab6_class::task_lines ( )
         skeletezation ( frame, skelet );
         imshow ( windowLinesSkeleted, skelet );
 
-        vector < Vec2f > lines;
+        vector < Vec4i > lines;
         find_lines ( skelet, lines );
         if ( lines.empty ( ) )
         {
@@ -293,7 +294,7 @@ void lab6_class::find_lines ( InputArray skel_img, vector < Vec4i > &lines )
     HoughLinesP ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
 }
 
-void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, std::vector < cv::Vec2f > &lines )
+void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, std::vector < cv::Vec4i > &lines )
 {
     if ( !linesLoaded )
     {
@@ -311,65 +312,125 @@ void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, 
 
     try
     {
-        float eps_th = 0.05f;
-        int eps_rho = 10;
-        for ( uint i = 0 ; i < lines.size ( ) ; i++ )
+        // Подсчет всех тангенсов
+        std::vector < double > linesTan;
+        for ( uint i = 0; i < lines.size ( ); i++ )
         {
-            for ( uint j = 0 ; j < lines.size ( ) ; j++ )
+            //      ( y2 - y1 )
+            // tan = ---------
+            //      ( x2 - x1 )
+            linesTan.push_back( static_cast < double > ( lines.at ( i )[ 3 ] - lines.at ( i )[ 1 ] )
+                    / static_cast < double > ( lines.at ( i )[ 2 ] - lines.at ( i )[ 0 ] ) );
+        }
+
+        // Поиск первой точки
+        // Первая точка в любом случае находится в самом низу изображения
+        std::vector <cv::Vec4i > sortedLines ( lines.size ( ) );
+        sortedLines.insert ( sortedLines.begin ( ),
+                             cv::Vec4i ( lines.at ( 0 )[ 0 ], sortedLines.at ( 0 )[ 1 ], 0, 0 ) );
+//        cv::Point firstPoint ( lines.at ( 0 )[ 0 ], skeletedImage.rows - 1 );
+        uint pointNum = 0;
+        if ( lines.at ( 0 )[ 2 ] > lines.at ( 0 )[ 0 ] )
+        {
+            sortedLines.at ( 0 )[ 0 ] = lines.at ( 0 )[ 2 ];
+        }
+        if ( lines.at ( 0 )[ 3 ] > lines.at ( 0 )[ 1 ] )
+        {
+            sortedLines.at ( 0 )[ 1 ] = lines.at ( 0 )[ 3 ];
+        }
+        for ( uint i = 0; i < lines.size ( ); i++ )
+        {
+            if ( ( lines.at ( i )[ 0 ] > sortedLines.at ( 0 )[ 0 ] &&
+                   lines.at ( i )[ 1 ] > sortedLines.at ( 0 )[ 1 ] ) ||
+                 ( lines.at ( i )[ 2 ] > sortedLines.at ( 0 )[ 0 ] &&
+                   lines.at ( i )[ 3 ] > sortedLines.at ( 0 )[ 1 ] ) )
             {
-                if ( i != j &&
-                     abs ( lines.at ( i )[ 0 ] - lines.at ( j )[ 0 ] ) <= eps_rho &&
-                     abs ( lines.at ( i )[ 1 ] - lines.at ( j )[ 1 ] ) <= eps_th )
+
+                // Первая линия не может быть горизонтальной
+                // ( скелетезация дает снизу горизонтальный кусок, который не нужно воспринимать )
+                if ( lines.at ( i )[ 0 ] != lines.at ( i )[ 2 ] )
                 {
-                    // FIXME во время видео скорее всего здесь OutOfRange
-                    lines.erase ( lines.begin ( ) + static_cast < int > ( i ) );
+                // Первая точка находится ниже остальных
+                    if ( lines.at ( i )[ 1 ] > lines.at ( i )[ 3 ] )
+                    {
+                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 0 ];
+                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 2 ];
+                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 3 ];
+                    }
+                    else
+                    {
+                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 2 ];
+                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 0 ];
+                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 1 ];
+                    }
+                    pointNum = i;
+                    sortedLines.at ( 0 )[ 1 ] = skeletedImage.rows - 1;
                 }
             }
         }
 
-        Mat linesMask ( imageWithLines.size ( ), CV_8UC1, Scalar ( 0, 0, 0 ) );
-        linesMask.zeros ( skeletedImage.size ( ), CV_8UC1 );
-        draw_lines ( linesMask, lines, false );
-        for ( int y = linesMask.rows - 1 ; y != 0; y-- )
+        // Поиск следуюих точек как точек пересечения с предыдущей линией и взятия минимально удаленной точки
+        unsigned long minDistance = skeletedImage.rows - 1;
+        cv::Point newPoint;
+        for ( uint i = 0; i < sortedLines.size ( ) - 1; i++ )
         {
-            for ( int x = linesMask.cols - 1 ; x != 0; x--)
+            for ( uint j = 0; j < lines.size ( ); j++ )
             {
-                if ( skeletedImage.at < uchar > ( y, x ) != linesMask.at < uchar > ( y, x ) )
+                if ( i != j && ( i != pointNum || j != pointNum ) )
                 {
-                    linesMask.at < uchar > ( y, x ) = 0;
+                    cv::Point crossPoint = countCrossPoint( lines.at ( i ), lines.at ( j ) );
+                    unsigned long dist = cvRound ( sqrt ( pow ( lines.at ( i )[ 0 ] - crossPoint.x, 2 ) +
+                                                pow ( lines.at ( i )[ 1 ] - crossPoint.y, 2 ) ) );
+                    if ( dist < minDistance )
+                    {
+                        minDistance = dist;
+                        pointNum = j;
+                        newPoint = crossPoint;
+                    }
                 }
             }
+            sortedLines.at ( i )[ 2 ] = newPoint.x;
+            sortedLines.at ( i )[ 3 ] = newPoint.y;
+            std::vector < cv::Vec4i >::iterator iterator = sortedLines.begin ( ) /*+ i + 1*/;
+            sortedLines.insert ( iterator,
+                                 cv::Vec4i ( newPoint.x, newPoint.y, 0, 0 ) );
         }
 
-        // TODO можно найти крайние точки линий, чтобы по ним через line () строить
-        // TODO можно попробовать посоединять линии
-        // TODO можно попробовать удалить лишние артефакты ( хотя попробуй отличи их )
-        for ( int y = imageWithLines.rows - 1 ; y != 0; y-- )
-        {
-            for ( int x = imageWithLines.cols - 1 ; x != 0; x--)
-            {
-                if ( linesMask.at < uchar > ( y, x ) )
-                {
-                    imageWithLines.at < Vec3b > ( y, x ) = Vec3b ( 0, 0, 255 );
-                }
-            }
-        }
+        draw_lines ( imageWithLines, sortedLines, true );
     }
     catch ( exception &e )
     {
-        cout << endl << "MY EXCEPTION"
+        cout << endl << "merge_lines : MY EXCEPTION"
              << endl << e.what ( ) << endl;
     }
 }
 
-void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > lines, bool threeColors )
+cv::Point lab6_class::countCrossPoint ( cv::Vec4i line1, cv::Vec4i line2 )
+{
+    if ( line1 [ 0 ] == line1 [ 2 ] ||
+         line1 [ 1 ] == line1 [ 3 ] ||
+         line2 [ 0 ] == line2 [ 2 ] ||
+         line2 [ 1 ] == line2 [ 3 ] )
+    {
+        return cv::Point ( 0, 0 );
+    }
+    double k1 = ( line1 [ 3 ] - line1 [ 1 ] ) / ( line1 [ 2 ] - line1 [ 0 ] );
+    double k2 = ( line2 [ 3 ] - line2 [ 1 ] ) / ( line2 [ 2 ] - line2 [ 0 ] );
+
+    int xcross = static_cast < int > (
+                     ( k1 * line1 [ 0 ] - k2 * line2 [ 0 ] + line2 [ 1 ] - line1 [ 1 ] ) /
+                     ( k1 - k2 )
+                );
+    int ycross = static_cast < int > ( ( xcross - line1 [ 0 ] ) * k1 + line1 [ 1 ] );
+    return cv::Point ( xcross, ycross );
+}
+
+void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec4i > lines, bool threeColors )
 {
     Mat image;
     image = img.getMat_ ( );
 
     // Рисуем линии
-    float rho = 0;
-    float theta = 0;
     Scalar color;
     if ( threeColors )
     {
@@ -382,18 +443,8 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
 
     for ( uint i = 0 ; i < lines.size ( ) ; i++ )
     {
-        rho = lines.at ( i )[ 0 ];
-        theta = lines.at ( i )[ 1 ];
-        Point pt1, pt2;
-        float a = cos ( theta );
-        float b = sin ( theta );
-        float x0 = a * rho;
-        float y0 = b * rho;
-
-        pt1.x = cvRound ( x0 + 1000 * ( -b ) );
-        pt1.y = cvRound ( y0 + 1000 * ( a ) );
-        pt2.x = cvRound ( x0 - 1000 * ( -b ) );
-        pt2.y = cvRound ( y0 - 1000 * ( a ) );
+        Point pt1 ( lines.at ( i ) [ 0 ], lines.at ( i ) [ 1 ] );
+        Point pt2 ( lines.at ( i ) [ 2 ], lines.at ( i ) [ 3 ] );
 
         if ( threeColors )
         {
@@ -408,13 +459,11 @@ void lab6_class::draw_lines ( InputOutputArray img, std::vector < cv::Vec2f > li
 void lab6_class::make_windows_lines ( )
 {
     namedWindow ( windowLinesOriginal, 1 );
-    namedWindow ( windowLinesThreshed, 1 );
     namedWindow ( windowLinesSkeleted, 1 );
 }
 
 void lab6_class::destroy_windows_lines ( )
 {
     destroyWindow ( windowLinesOriginal );
-    destroyWindow ( windowLinesThreshed );
     destroyWindow ( windowLinesSkeleted );
 }
