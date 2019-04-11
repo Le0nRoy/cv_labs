@@ -1,9 +1,11 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include "5/lab5_class.h"
+#include "5/lab5.h"
 #include "6/lab6_class.h"
 #include "6/lines.h"
 #include "Aruco/lab_aruco.h"
+#include "Aruco/samples.hpp"
 
 using namespace std;
 using namespace cv;
@@ -84,8 +86,9 @@ int main ( )
 
 bool run_lab5 ( )
 {
+    lab5 ( );
     destroyAllWindows ( );
-    return true;
+    return false;
 }
 
 bool run_lab6 ( )
@@ -156,7 +159,8 @@ bool run_lab_aruco ( )
 {
     lab_aruco labAruco;
     labAruco.loadVideo ( labArucoVideoNum );
-    labAruco.run_lab ( );
+    aruco_lab ( );
+//    labAruco.run_lab ( );
     destroyAllWindows ( );
     return false;
 }
