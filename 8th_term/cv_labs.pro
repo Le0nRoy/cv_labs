@@ -17,11 +17,13 @@ SOURCES += \
     6/lab6_class.cpp \
     6/lab6_class_lines.cpp \
     6/lab6_class_coins.cpp \
+    6/lines.cpp \
     5/lab5_class.cpp \
     Aruco/lab_aruco.cpp
 #      6/lab6_class_thrash.cpp
 
 HEADERS += \
     6/lab6_class.h \
+    6/lines.h \
     5/lab5_class.h \
     Aruco/lab_aruco.h

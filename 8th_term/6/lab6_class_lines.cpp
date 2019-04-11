@@ -17,7 +17,7 @@ static string windowLinesSkeleted = "lines_skeleted";
 static int trackbarValueWaitTimeSkelet = 10;
 static const int trackbarLimitWaitTimeSkelet = 1000;
 
-static int trackbarValueHoughThresh = 35;
+static int trackbarValueHoughThresh = 50;
 static const int trackbarLimitHoughThresh = 100;
 
 static const int threshMaxVal = 255;
@@ -72,6 +72,7 @@ bool lab6_class::task_lines ( )
 
         }
 
+//        together ( frame, lines );
         merge_lines ( skelet, frame, lines );
 
         imshow ( windowLinesOriginal, frame );
@@ -99,9 +100,12 @@ void lab6_class::skeletezation ( InputArray src, OutputArray skeleted_img )
     skeleted_img.create ( srcImg.size ( ), CV_8U );
     thresh_img = skeleted_img.getMat_ ( );
 
+    blur ( srcImg, thresh_img, Size ( 5, 5 ) );
     cvtColor ( srcImg, thresh_img, CV_BGR2GRAY );
     inRange ( srcImg, Scalar ( 84, 72, 61 ), Scalar ( 156, 147, 150 ), thresh_img );
+//    inRange(thresh_img, 70, 180, thresh_img);
     clear_above_horizont ( thresh_img );
+    imshow ( "thresh", thresh_img );
 
 //    namedWindow ( "hsvImg", 1 );
 //    int h = 84;
@@ -291,7 +295,49 @@ void lab6_class::find_lines ( InputArray skel_img, vector < Vec4i > &lines )
         return;
     }
 
-    HoughLinesP ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
+//    HoughLinesP ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh );
+    HoughLinesP ( img, lines, 1, CV_PI / 180, trackbarValueHoughThresh, 50, 80 );
+}
+
+void lab6_class::together ( cv::InputOutputArray image, vector < Vec4i > &lines )
+{
+    Mat frame = image.getMat ( );
+    if ( frame.empty ( ) )
+    {
+        cout << " together ( ) : empty matrix ! " << endl;
+        return;
+    }
+
+    Point d;
+    int r_min = 25;
+
+    for (uint k = 0; k < lines.size(); k++)
+    {
+        Vec4i l = lines[k];
+        for (size_t i = 0; i < lines.size(); i++)
+        {
+            Vec4i j = lines[i];
+            if (i != k)
+            {
+                if (abs(l[0] - j[2]) < r_min && abs(l[1] - j[3]) < r_min)
+                {
+                    line(frame, Point(l[0], l[1]), Point(j[2], j[3]), Scalar(0, 0, 255), 3, CV_AA);
+                }
+                if (abs(l[2] - j[0]) < r_min && abs(l[3] - j[1]) < r_min)
+                {
+                    line(frame, Point(l[2], l[3]), Point(j[0], j[1]), Scalar(0, 0, 255), 3, CV_AA);
+                }
+                if (abs(l[0] - j[0]) < r_min && abs(l[1] - j[1]) < r_min)
+                {
+                    line(frame, Point(l[0], l[1]), Point(j[0], j[1]), Scalar(0, 0, 255), 3, CV_AA);
+                }
+                if (abs(l[2] - j[2]) < r_min && abs(l[3] - j[3]) < r_min)
+                {
+                    line(frame, Point(l[2], l[3]), Point(j[2], j[3]), Scalar(0, 0, 255), 3, CV_AA);
+                }
+            }
+        }
+    }
 }
 
 void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, std::vector < cv::Vec4i > &lines )
@@ -313,90 +359,90 @@ void lab6_class::merge_lines ( InputArray skel_img, InputOutputArray drawImage, 
     try
     {
         // Подсчет всех тангенсов
-        std::vector < double > linesTan;
-        for ( uint i = 0; i < lines.size ( ); i++ )
-        {
-            //      ( y2 - y1 )
-            // tan = ---------
-            //      ( x2 - x1 )
-            linesTan.push_back( static_cast < double > ( lines.at ( i )[ 3 ] - lines.at ( i )[ 1 ] )
-                    / static_cast < double > ( lines.at ( i )[ 2 ] - lines.at ( i )[ 0 ] ) );
-        }
+//        std::vector < double > linesTan;
+//        for ( uint i = 0; i < lines.size ( ); i++ )
+//        {
+//            //      ( y2 - y1 )
+//            // tan = ---------
+//            //      ( x2 - x1 )
+//            linesTan.push_back( static_cast < double > ( lines.at ( i )[ 3 ] - lines.at ( i )[ 1 ] )
+//                    / static_cast < double > ( lines.at ( i )[ 2 ] - lines.at ( i )[ 0 ] ) );
+//        }
 
-        // Поиск первой точки
-        // Первая точка в любом случае находится в самом низу изображения
-        std::vector <cv::Vec4i > sortedLines ( lines.size ( ) );
-        sortedLines.insert ( sortedLines.begin ( ),
-                             cv::Vec4i ( lines.at ( 0 )[ 0 ], sortedLines.at ( 0 )[ 1 ], 0, 0 ) );
-//        cv::Point firstPoint ( lines.at ( 0 )[ 0 ], skeletedImage.rows - 1 );
-        uint pointNum = 0;
-        if ( lines.at ( 0 )[ 2 ] > lines.at ( 0 )[ 0 ] )
-        {
-            sortedLines.at ( 0 )[ 0 ] = lines.at ( 0 )[ 2 ];
-        }
-        if ( lines.at ( 0 )[ 3 ] > lines.at ( 0 )[ 1 ] )
-        {
-            sortedLines.at ( 0 )[ 1 ] = lines.at ( 0 )[ 3 ];
-        }
-        for ( uint i = 0; i < lines.size ( ); i++ )
-        {
-            if ( ( lines.at ( i )[ 0 ] > sortedLines.at ( 0 )[ 0 ] &&
-                   lines.at ( i )[ 1 ] > sortedLines.at ( 0 )[ 1 ] ) ||
-                 ( lines.at ( i )[ 2 ] > sortedLines.at ( 0 )[ 0 ] &&
-                   lines.at ( i )[ 3 ] > sortedLines.at ( 0 )[ 1 ] ) )
-            {
+//        // Поиск первой точки
+//        // Первая точка в любом случае находится в самом низу изображения
+//        std::vector <cv::Vec4i > sortedLines ( lines.size ( ) );
+//        sortedLines.insert ( sortedLines.begin ( ),
+//                             cv::Vec4i ( lines.at ( 0 )[ 0 ], sortedLines.at ( 0 )[ 1 ], 0, 0 ) );
+////        cv::Point firstPoint ( lines.at ( 0 )[ 0 ], skeletedImage.rows - 1 );
+//        uint pointNum = 0;
+//        if ( lines.at ( 0 )[ 2 ] > lines.at ( 0 )[ 0 ] )
+//        {
+//            sortedLines.at ( 0 )[ 0 ] = lines.at ( 0 )[ 2 ];
+//        }
+//        if ( lines.at ( 0 )[ 3 ] > lines.at ( 0 )[ 1 ] )
+//        {
+//            sortedLines.at ( 0 )[ 1 ] = lines.at ( 0 )[ 3 ];
+//        }
+//        for ( uint i = 0; i < lines.size ( ); i++ )
+//        {
+//            if ( ( lines.at ( i )[ 0 ] > sortedLines.at ( 0 )[ 0 ] &&
+//                   lines.at ( i )[ 1 ] > sortedLines.at ( 0 )[ 1 ] ) ||
+//                 ( lines.at ( i )[ 2 ] > sortedLines.at ( 0 )[ 0 ] &&
+//                   lines.at ( i )[ 3 ] > sortedLines.at ( 0 )[ 1 ] ) )
+//            {
 
-                // Первая линия не может быть горизонтальной
-                // ( скелетезация дает снизу горизонтальный кусок, который не нужно воспринимать )
-                if ( lines.at ( i )[ 0 ] != lines.at ( i )[ 2 ] )
-                {
-                // Первая точка находится ниже остальных
-                    if ( lines.at ( i )[ 1 ] > lines.at ( i )[ 3 ] )
-                    {
-                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 0 ];
-                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 2 ];
-                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 3 ];
-                    }
-                    else
-                    {
-                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 2 ];
-                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 0 ];
-                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 1 ];
-                    }
-                    pointNum = i;
-                    sortedLines.at ( 0 )[ 1 ] = skeletedImage.rows - 1;
-                }
-            }
-        }
+//                // Первая линия не может быть горизонтальной
+//                // ( скелетезация дает снизу горизонтальный кусок, который не нужно воспринимать )
+//                if ( lines.at ( i )[ 0 ] != lines.at ( i )[ 2 ] )
+//                {
+//                // Первая точка находится ниже остальных
+//                    if ( lines.at ( i )[ 1 ] > lines.at ( i )[ 3 ] )
+//                    {
+//                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 0 ];
+//                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 2 ];
+//                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 3 ];
+//                    }
+//                    else
+//                    {
+//                        sortedLines.at ( 0 )[ 0 ] = lines.at ( i )[ 2 ];
+//                        sortedLines.at ( 0 )[ 2 ] = lines.at ( i )[ 0 ];
+//                        sortedLines.at ( 0 )[ 3 ] = lines.at ( i )[ 1 ];
+//                    }
+//                    pointNum = i;
+//                    sortedLines.at ( 0 )[ 1 ] = skeletedImage.rows - 1;
+//                }
+//            }
+//        }
 
-        // Поиск следуюих точек как точек пересечения с предыдущей линией и взятия минимально удаленной точки
-        unsigned long minDistance = skeletedImage.rows - 1;
-        cv::Point newPoint;
-        for ( uint i = 0; i < sortedLines.size ( ) - 1; i++ )
-        {
-            for ( uint j = 0; j < lines.size ( ); j++ )
-            {
-                if ( i != j && ( i != pointNum || j != pointNum ) )
-                {
-                    cv::Point crossPoint = countCrossPoint( lines.at ( i ), lines.at ( j ) );
-                    unsigned long dist = cvRound ( sqrt ( pow ( lines.at ( i )[ 0 ] - crossPoint.x, 2 ) +
-                                                pow ( lines.at ( i )[ 1 ] - crossPoint.y, 2 ) ) );
-                    if ( dist < minDistance )
-                    {
-                        minDistance = dist;
-                        pointNum = j;
-                        newPoint = crossPoint;
-                    }
-                }
-            }
-            sortedLines.at ( i )[ 2 ] = newPoint.x;
-            sortedLines.at ( i )[ 3 ] = newPoint.y;
-            std::vector < cv::Vec4i >::iterator iterator = sortedLines.begin ( ) /*+ i + 1*/;
-            sortedLines.insert ( iterator,
-                                 cv::Vec4i ( newPoint.x, newPoint.y, 0, 0 ) );
-        }
+//        // Поиск следуюих точек как точек пересечения с предыдущей линией и взятия минимально удаленной точки
+//        unsigned long minDistance = skeletedImage.rows - 1;
+//        cv::Point newPoint;
+//        for ( uint i = 0; i < sortedLines.size ( ) - 1; i++ )
+//        {
+//            for ( uint j = 0; j < lines.size ( ); j++ )
+//            {
+//                if ( i != j && ( i != pointNum || j != pointNum ) )
+//                {
+//                    cv::Point crossPoint = countCrossPoint( lines.at ( i ), lines.at ( j ) );
+//                    unsigned long dist = cvRound ( sqrt ( pow ( lines.at ( i )[ 0 ] - crossPoint.x, 2 ) +
+//                                                pow ( lines.at ( i )[ 1 ] - crossPoint.y, 2 ) ) );
+//                    if ( dist < minDistance )
+//                    {
+//                        minDistance = dist;
+//                        pointNum = j;
+//                        newPoint = crossPoint;
+//                    }
+//                }
+//            }
+//            sortedLines.at ( i )[ 2 ] = newPoint.x;
+//            sortedLines.at ( i )[ 3 ] = newPoint.y;
+//            std::vector < cv::Vec4i >::iterator iterator = sortedLines.begin ( ) /*+ i + 1*/;
+//            sortedLines.insert ( iterator,
+//                                 cv::Vec4i ( newPoint.x, newPoint.y, 0, 0 ) );
+//        }
 
-        draw_lines ( imageWithLines, sortedLines, true );
+        draw_lines ( imageWithLines, lines, true );
     }
     catch ( exception &e )
     {

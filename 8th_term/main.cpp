@@ -2,6 +2,7 @@
 #include <opencv2/highgui.hpp>
 #include "5/lab5_class.h"
 #include "6/lab6_class.h"
+#include "6/lines.h"
 #include "Aruco/lab_aruco.h"
 
 using namespace std;
@@ -119,10 +120,14 @@ bool run_lab6 ( )
             }
             case 2:
             {
-                if ( lab6.task_lines ( ) )
+                if ( !lines_lab ( ) )
                 {
                     waitKey ( 0 );
                 }
+//                if ( lab6.task_lines ( ) )
+//                {
+//                    waitKey ( 0 );
+//                }
                 break;
             }
             case 0:

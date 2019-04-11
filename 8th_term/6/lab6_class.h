@@ -91,6 +91,8 @@ private:
 
     void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec4i > &lines );
 
+    void together ( cv::InputOutputArray image, std::vector < cv::Vec4i > &lines );
+
     void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec4i > &lines );
 
     cv::Point countCrossPoint ( cv::Vec4i line1, cv::Vec4i line2 );
