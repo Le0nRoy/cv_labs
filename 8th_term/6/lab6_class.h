@@ -15,7 +15,7 @@ public:
 
     bool task_coins ( );
 
-    bool task_lines ( );
+    int lines_lab();
 
     bool loadLines ( const std::string wayToImgLines );
 
@@ -54,54 +54,6 @@ private:
     cv::VideoCapture linesVideo;
 
     bool linesLoaded;
-
-    /**
-     * @brief - скелетезация нынешнего кадра
-     *   * надо б переделать получение кадров, чтоб можно было одновременно и скелетизированное смотреть и обычное *
-     */
-    void skeletezation ( const cv::_InputArray &src, const cv::_OutputArray &skeleted_img );
-
-    /**
-     * @brief - убирает все пиксели выше середины
-     * @param image
-     */
-    void clear_above_horizont ( cv::InputOutputArray image );
-
-    /**
-     * @brief - полная итерация скелитизации по алгоритму Шанг-Суня
-     * @param iter - номер шага
-     */
-    bool skeletezation_iter ( cv::InputArray img, cv::OutputArray skeleted_img, int iter );
-
-    /**
-     * @brief - поиск соседей заданного пиксела
-     * @param img
-     * @param pix
-     * @return - массив соседей пиксела в правильном порядке ( P2, P3 .. P9 )
-     */
-    void neighbours ( cv::InputArray img, cv::Point pix, uchar *neighbs );
-
-    /**
-     * @brief - подсчет переходов от чёрного к белому "0->1"
-     *          *более подробное описание алгоритма*
-     * @param neighb - соседи заданного пиксела
-     * @return - кол-во переходов
-     */
-    int trans ( uchar *neighb );
-
-    void find_lines ( cv::InputArray skel_img, std::vector < cv::Vec4i > &lines );
-
-    void together ( cv::InputOutputArray image, std::vector < cv::Vec4i > &lines );
-
-    void merge_lines ( cv::InputArray skel_img, cv::InputOutputArray drawImage, std::vector < cv::Vec4i > &lines );
-
-    cv::Point countCrossPoint ( cv::Vec4i line1, cv::Vec4i line2 );
-
-    void draw_lines ( cv::InputOutputArray img, std::vector < cv::Vec4i > lines, bool threeColors );
-
-    void make_windows_lines ( );
-
-    void destroy_windows_lines ( );
 
 };
 

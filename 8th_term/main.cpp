@@ -3,7 +3,6 @@
 #include "5/lab5_class.h"
 #include "5/lab5.h"
 #include "6/lab6_class.h"
-#include "6/lines.h"
 #include "Aruco/lab_aruco.h"
 #include "Aruco/samples.hpp"
 
@@ -86,7 +85,10 @@ int main ( )
 
 bool run_lab5 ( )
 {
-    lab5 ( );
+    lab5_class lab5Class;
+    lab5Class.loadVideo ( lab5VideoLight );
+    lab5Class.run_lab ( );
+//    lab5 ( );
     destroyAllWindows ( );
     return false;
 }
@@ -123,14 +125,10 @@ bool run_lab6 ( )
             }
             case 2:
             {
-                if ( !lines_lab ( ) )
+                if ( !lab6.lines_lab ( ) )
                 {
                     waitKey ( 0 );
                 }
-//                if ( lab6.task_lines ( ) )
-//                {
-//                    waitKey ( 0 );
-//                }
                 break;
             }
             case 0:

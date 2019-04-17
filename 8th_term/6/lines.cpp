@@ -1,6 +1,6 @@
 #include <opencv2\opencv.hpp>
 #include <cmath>
-#include "lines.h"
+#include "lab6_class.h"
 using namespace cv;
 using namespace std;
 
@@ -20,12 +20,12 @@ static int A();
 static int B();
 static void skeleton();
 
-int lines_lab()
+int lab6_class::lines_lab()
 {
     // открываем видео
-    VideoCapture cap("../6/line.avi");
+//    VideoCapture cap("../6/line.avi");
     // проверяем успешно ли открыли источник видео
-    if (!cap.isOpened())
+    if (!linesVideo.isOpened())
     {
 		return -1;
     }
@@ -34,7 +34,7 @@ int lines_lab()
 	{
 		flag = 0;
         // получаем новый кадр с камеры
-        cap >> frame;
+        linesVideo >> frame;
 		frame.copyTo(img);
 		imshow("lines", img);
 		blur(img, img, Size(5, 5));

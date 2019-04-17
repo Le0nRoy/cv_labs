@@ -19,11 +19,9 @@ SOURCES += \
 # lab6
 HEADERS += \
     6/lab6_class.h \
-    6/lines.h \
 
 SOURCES += \
     6/lab6_class.cpp \
-    6/lab6_class_lines.cpp \
     6/lab6_class_coins.cpp \
     6/lines.cpp \
 #      6/lab6_class_thrash.cpp
@@ -31,11 +29,11 @@ SOURCES += \
 #lab5
 HEADERS += \
     5/lab5_class.h \
-    5/lab5.h
+    5/lab5.h \
 
 SOURCES += \
     5/lab5_class.cpp \
-    5/lab5.cpp
+    5/lab5.cpp \
 
 #Aruco
 HEADERS += \
@@ -48,4 +46,5 @@ SOURCES += \
     Aruco/detect_markers.cpp \
 #    Aruco/create_marker.cpp \
     Aruco/calibrate_camera.cpp \
-    Aruco/aruco_lab.cpp
+    Aruco/aruco_lab.cpp \
+    Aruco/completeArchivArucoLab/myDetectionsCube.cpp \
