@@ -1,124 +1,133 @@
-#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/aruco.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/aruco/charuco.hpp>
-#include <opencv2/aruco/dictionary.hpp>
-#include <opencv2/core/utility.hpp>
-#include <vector>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
+#include <opencv/cv.hpp>
+#include <stdint.h>
+#include <math.h>
+#include <opencv/cv.h>
 #include <iostream>
-#include <ctime>
-#include <cstdlib>
+#include <complex>
+#include <cmath>
 
-#define PI 3.14159265359
-
-using namespace std;
 using namespace cv;
+using namespace std;
 
-int process(VideoCapture& capture);
-Mat grid(Mat &img);
-Point2d map_pixel(int col, int row);
 
-const string videoname = "../5/0.avi";//.avi";
-int width_map = 600;
-int height_map = 600;
-float d = -0.25;
-double cx, cy, fx, fy;
-
-int lab5()
+double x_calculations(double i)
 {
-    Mat img;
-    Mat transit_matrix = Mat::zeros(4, 4, CV_64F);
-    double angle = 74 * PI / 180;
-    VideoCapture capture(videoname, CAP_ANY);
-    if (!capture.isOpened())
-    {
-        cout << "Failed to open the video device, video file or image sequence!" << endl;
-        return -1;
-    }
-    capture >> img;
-    cx = img.cols / 2;
-    cy = img.rows / 2;
-    fx = tan(angle) * cx;
-    fy = fx;
-    transit_matrix.at<double>(0, 0) = fx;
-    transit_matrix.at<double>(1, 1) = fy;
-    transit_matrix.at<double>(0, 3) = cx;
-    transit_matrix.at<double>(1, 3) = cy;
-    transit_matrix.at<double>(3, 3) = 1;
-
-    process(capture);
-    return 0;
+    double x = 205457 * i*i*i / 2350879200 - 123717 * i*i / 23508792 + 128769947 * i / 261208800 + 162 / 5;
+    x /= 20;
+    return x;
 }
 
-int process(VideoCapture& capture)
+double y_calculations(double j, double x)
 {
-    Mat kernel = Mat::ones(3, 3, CV_8U);
-    Point2d dot;
-    Point2i dot1 = Point2i(0, 0);
-    Mat frame;
-    Mat frame_copy;
-    Mat map;
-    for (;;)
+    double alpha;
+    if (j < 80)
     {
-        capture >> frame;
-        if (frame.empty())
-            break;
-        frame_copy = Mat::zeros(frame.rows, frame.cols, CV_8U);
-        imshow("Original video", frame);
-        cvtColor(frame, frame_copy, COLOR_BGR2GRAY);
-        threshold(frame_copy, frame_copy, 135, 255, THRESH_BINARY);
-        dilate(frame_copy, frame_copy, kernel, Point(-1, -1), 2);
-        erode(frame_copy, frame_copy, kernel, Point(-1, -1), 2);
-        //imshow("Binary video", frame_copy);
-        map = Mat::zeros(height_map, width_map, CV_8UC3);
-        map = grid(map);
-        for (int i = 0; i < frame.rows; i++)
+        j = 80 - j;
+        alpha = (j / 360.0)*(37.0*CV_PI / 180.0);
+    }
+    else
+    {
+        j = j - 80;
+        alpha = -(j / 360.0)*(37.0*CV_PI / 180.0);
+    }
+
+    double y = x*tan(alpha);
+
+    y -= 30;
+    y *= 1;
+
+    return y;
+}
+
+
+int lab5 ( )
+{
+    int graphicCoefficient = 2;
+
+    Mat scanImg(500* graphicCoefficient, 500 * graphicCoefficient, CV_8UC3, Scalar(0, 0, 0));
+
+    int dist = 10 * graphicCoefficient;
+
+    int width = scanImg.size().width;
+
+    int height = scanImg.size().height;
+
+    for (int i = 0; i < height; i += dist)
+        line(scanImg, Point(0, i), Point(width, i), Scalar(255, 255, 255));
+
+    for (int i = 0; i < width; i += dist)
+        line(scanImg, Point(i, 0), Point(i, height), Scalar(255, 255, 255));
+
+    Mat startScanImg = scanImg.clone();
+
+    VideoCapture myVideo;
+
+//    myVideo.open("../../../tasks/5/Video/0.avi");
+//    myVideo.open("../../../tasks/5/Video/calib_1.avi");
+    myVideo.open("../../../tasks/5/Video/1.avi");
+
+    Mat inputImg;
+//    Mat inputImg = imread("video/calib_1_0.jpg");
+
+    Mat outputImg, hsvInputImg;
+
+    while (1)
+    {
+        scanImg = startScanImg.clone();
+
+        Mat frame;
+        myVideo >> frame;
+        inputImg = frame.clone();
+
+        cvtColor(inputImg, hsvInputImg, CV_BGR2HSV);
+//        namedWindow ( "out", 1 );
+//            int h = 84;
+//            int s = 72;
+//            int v = 61;
+//            int hMax = 156;
+//            int sMax = 147;
+//            int vMax = 150;
+//            createTrackbar ( "h", "out", &h, 180 );
+//            createTrackbar ( "s", "out", &s, 255 );
+//            createTrackbar ( "v", "out", &v, 255 );
+//            createTrackbar ( "hMax", "out", &hMax, 180 );
+//            createTrackbar ( "sMax", "out", &sMax, 255 );
+//            createTrackbar ( "vMax", "out", &vMax, 255 );
+//            while ( waitKey ( 100 ) != 27 )
+//            {
+//                inRange ( hsvInputImg, Scalar ( h, s, v ), Scalar ( hMax, sMax, vMax ), outputImg );
+//                imshow ( "hsvImg", outputImg );
+//            }
+        inRange(hsvInputImg, Vec3b(17, 0, 65), Vec3b(118, 189, 255), outputImg);
+
+        for (int i = 0; i < outputImg.rows; i++)
         {
-            for (int j = 0; j < frame.cols; j++)
+            for (int j = 0; j < outputImg.cols; j++)
             {
-                if (frame_copy.at<uchar>(i, j) != 0)
+                if (outputImg.at<uchar>(i, j) == 255)
                 {
-                    dot = map_pixel(j, i);
-                    dot1.x = (int)(width_map - (dot.y) * 100) % width_map;
-                    dot1.y = (int)(height_map / 2 - (dot.x) * 100) % height_map;
-                    /// SIGFAULT
-                    map.at<Vec3b>(dot1.y, dot1.x) = {0, 255, 255};
+                    double xPoint = x_calculations(i);
+                    double yPoint = y_calculations(j, xPoint);
+
+                    circle(scanImg, Point(scanImg.rows / 2.0 - yPoint * graphicCoefficient, (xPoint)*graphicCoefficient), 2, Scalar(255, 0, 0), -1);
                 }
             }
         }
-        rotate(map, map, 2);
-        imshow("Map", map);
-        char key = (char)waitKey(30); //delay N millis, usually long enough to display and capture input
-        if(key >= 0) break;
+
+
+        imshow("mat", scanImg);
+        imshow("out", outputImg);
+        imshow("img", inputImg);
+
+        if (waitKey(1) >= 0) break;
     }
-    capture.release();
-    destroyAllWindows();
+    waitKey();
+
     return 0;
-}
-
-Mat grid(Mat &img)
-{
-    for (int x = 0; x < img.cols; x = x + 20)
-        line(img, Point(0, x), Point(img.rows, x), Scalar(100, 100, 100), 1, 1);
-    for (int y = 0; y < img.rows; y += 20)
-        line(img, Point(y, 0), Point(y, img.cols), Scalar(100, 100, 100), 1, 1);
-    return img;
-}
-
-Point2d map_pixel(int col, int row)
-{
-    Point2d dot = Point2d (0, 0);
-    double px = (col - cx) / fx;
-    double py = (row - cy) / fy;
-    double pz = 1;
-    double mod = pow((pow(px, 2.0) + pow(py, 2.0) + pow(pz, 2.0)), 0.5);
-    double ex = px / mod;
-    double ey = py / mod;
-    double ez = pz / mod;
-    double k = -d / ey; //т. к. n = [0 1 0]
-    dot.x = k * ex;
-    dot.y = k * ez;
-    return dot;
 }

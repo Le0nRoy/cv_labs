@@ -85,10 +85,10 @@ int main ( )
 
 bool run_lab5 ( )
 {
-    lab5_class lab5Class;
-    lab5Class.loadVideo ( lab5VideoLight );
-    lab5Class.run_lab ( );
-//    lab5 ( );
+//    lab5_class lab5Class;
+//    lab5Class.loadVideo ( lab5VideoLight );
+//    lab5Class.run_lab ( );
+    lab5 ( );
     destroyAllWindows ( );
     return false;
 }
